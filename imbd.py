@@ -2,58 +2,96 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
-url = "https://www.google.com/search?q=the+last+of+us+game+imdb&newwindow=1&sca_esv=07dd5598d35cffb5&sxsrf=ADLYWIJLL_lJ8xreXvKC30uH4IGmBKIWWg%3A1718575320335&ei=2GBvZpWKFOnN1sQPp46egA0&ved=0ahUKEwiV1vP7j-GGAxXpppUCHSeHB9AQ4dUDCBA&uact=5&oq=the+last+of+us+game+imdb&gs_lp=Egxnd3Mtd2l6LXNlcnAiGHRoZSBsYXN0IG9mIHVzIGdhbWUgaW1kYjIIEAAYgAQYywEyBRAAGIAEMgYQABgIGB4yBhAAGAgYHjIGEAAYCBgeMgsQABiABBiGAxiKBTILEAAYgAQYhgMYigUyCxAAGIAEGIYDGIoFMgsQABiABBiGAxiKBTILEAAYgAQYhgMYigVI1SBQhAdYpwtwAXgBkAEAmAGYA6ABjQiqAQkwLjEuMi4wLjG4AQPIAQD4AQGYAgKgAokCwgIKEAAYsAMY1gQYR8ICDRAAGIAEGLADGEMYigXCAhYQLhiABBiwAxhDGNQCGMgDGIoF2AEBwgITEC4YgAQYsAMYQxjIAxiKBdgBAZgDAIgGAZAGFLoGBggBEAEYCJIHBTEuMC4xoAeFIQ&sclient=gws-wiz-serp"
-url = "https://www.google.com.br/search?q=diablo+III+imdb&newwindow=1&sca_esv=c8a309c0fc9cf8f6&sxsrf=ADLYWIL8ZjcEmpjuAXli4Kna3Uw67ylSFw%3A1718576999642&ei=Z2dvZvHcJpHe1sQPwZ6osAQ&ved=0ahUKEwixrNScluGGAxURr5UCHUEPCkYQ4dUDCBA&uact=5&oq=diablo+III+imdb&gs_lp=Egxnd3Mtd2l6LXNlcnAiD2RpYWJsbyBJSUkgaW1kYjIFEAAYgAQyBhAAGBYYHjILEAAYgAQYhgMYigUyCxAAGIAEGIYDGIoFMggQABiABBiiBEi0EVDAAlicDnABeAGQAQCYAfwBoAHlBqoBBTAuNC4xuAEDyAEA-AEBmAIGoAKmB8ICChAAGLADGNYEGEfCAg0QABiABBiwAxhDGIoFwgIOEAAYsAMY5AIY1gTYAQHCAhMQLhiABBiwAxhDGMgDGIoF2AECwgIWEC4YgAQYsAMYQxjUAhjIAxiKBdgBAsICCBAuGIAEGMsBwgIIEAAYgAQYywHCAhcQLhiABBjLARiXBRjcBBjeBBjgBNgBA8ICChAAGIAEGBQYhwKYAwCIBgGQBhO6BgYIARABGAm6BgYIAhABGAi6BgYIAxABGBSSBwUxLjQuMaAHkiE&sclient=gws-wiz-serp"
-def pegar_link_comentario(jogos):
-    """
-    pega o link do imdb do jogo quando pesquisado no google
-    """
-    links = []
-    for url in jogos:
-        page = requests.get(url)
-        fatia = BeautifulSoup(page.text, "lxml")
-        fat = fatia.find("div", class_="egMi0 kCrYT")
-        link = fat.find("a")['href']
-        limpo = re.search(r'/url\?q=(.+?)&sa=U',link)
-        links.append(limpo.group(1) + "reviews/?ref_=tt_ov_rt")
-    return links
-#print(pegar_link_comentario(url))
+def pegar_lista_empresas():
+    lista = []
+    with open('lista_de_pesquisa.csv', 'r', encoding='utf-8') as arquivo:
+        for li in arquivo:
+            lista.append(li)
+        return li
 
-def pega_lista_jogos():
-    """
-    pega os jogos do arquivo lista_games.txt
-    """
-    i = 1
-    jogos = []
-    with open('lista_games.txt', 'r') as arquivo:
-        for jogo in arquivo:
-            jogos.append(jogo)
-            i+=1
-            if(i >=100):
-                break
-    return jogos
+def achar_url(jogo):
+    jogo = re.sub(' ', '+',jogo) + "+game+imdb"
+    link = f"https://www.google.com.br/search?q={jogo}"
+    page = requests.get(link)
+    soup = BeautifulSoup(page.text,"lxml")
+    fatia = soup.find("div", class_="egMi0 kCrYT")
+    link = fatia.find("a")
+    link = link['href']
+    link = re.search(r'/url\?q=(.+?)&sa=',link).group(1)
+    return(link+"reviews/?ref_=tt_ov_rt")    
+    
+achar_url("the last of us")
 
-def pesquisa_google(jogos):
-    links= []
-    for jogo in jogos:    
-        jogo = re.sub(r' ', '+',jogo)
-        links.append(f"https://www.google.com.br/search?q={jogo}+game+imdb")
-    return links
-
-jogos = pega_lista_jogos()
-jogos = pesquisa_google(jogos)
-jogos = pegar_link_comentario(jogos)
-print(jogos)
-i = 1
-for jogo in jogos:
+def info_pessoa(pessoa):
+    """
+    Pega o comentário de uma pessoa e extrai os dados dele
+    """
+    lista_pessoal=[]
+    titulo = re.sub(';','.', pessoa.find("a", class_="title").text.strip())
+    comentario = re.sub(';','.',pessoa.find("div", class_="text show-more__control").text.strip())
+    comentario = re.sub(r'\s+', ' ', comentario)
+    comentario = re.sub(r'\n', ' ',comentario)
+    #print(titulo)
     try:
-        with open('abcd.txt', 'a') as arquivo:
-            page = requests.get(jogo)
-            print(f"passou por {i} jogos")
-            soup = BeautifulSoup(page.text, "lxml")
-            lista = soup.find_all("div", class_="lister-item-content")
-            for comentario in lista:
-                arquivo.write(comentario.text.strip())
-            i+=1
+        nota = pessoa.find("span", class_="rating-other-user-rating").text.strip()
     except:
-        continue
+        nota = "Not Informed"
+    data = pessoa.find("span", class_="review-date").text.strip()
+    opiniao_pessoas = pessoa.find("div", class_="actions text-muted").text.strip().split('  ')[0]
+    lista_pessoal.append(titulo)
+    lista_pessoal.append(comentario)
+    lista_pessoal.append(nota)
+    lista_pessoal.append(data)
+    lista_pessoal.append(opiniao_pessoas)
+    return lista_pessoal
+
+def buscar_informacoes_do_jogo(jogo):
+    link = achar_url(jogo)
+    page = requests.get(link)
+    soup = BeautifulSoup(page.text, "lxml")
+    
+    info_pessoas = soup.find_all("div", class_="lister-item mode-detail imdb-user-review collapsable")
+    lista_jogo = [] #contém os comentários de um certo jogo
+    contagem = 1
+    #Para cada comentário irá se extrair os dados:
+    for pessoa in info_pessoas:
+        if(contagem>20):
+            break
+        #Aqui se extrai tudo que é necessário do comentário
+        lista_pessoal= info_pessoa(pessoa) #contém informações, nesta ordem:[titulo,comentario,nota,data,opiniao_pessoas]
+        lista_jogo.append(lista_pessoal)
+        contagem+=1    
+        
+    return lista_jogo
+
+def escrever(lista_comentarios_empresa):
+    with open('dados/imdb.csv', 'a', encoding = 'utf-8') as arquivo:
+        empresa = lista_comentarios_empresa[0]
+        for game in lista_comentarios_empresa[1:]:
+            jogo = game[0]
+            lista = game[1]
+            for pessoa in lista:
+                arquivo.write(f"{empresa};{jogo};{pessoa[0]};{pessoa[1]};{pessoa[2]};{pessoa[3]};{pessoa[4]}")
+def buscar_jogos_da_empresa(info):
+    #info está neste formato:Empresa1||||jogo_grande_1||||jogo_grande_2||||jogo_grande_3||||jogo_recente_1||||jogo_recente_2
+    info = info.split('||||')
+    empresa = info[0]
+    jogos = info[1:]
+    lista_comentarios_empresa = [empresa]
+    for jogo in jogos:
+        lista_comentarios_empresa.append([jogo,buscar_informacoes_do_jogo(jogo)])
+    escrever(lista_comentarios_empresa)
+    
+with open('dados/imdb.csv', 'w',encoding='utf-8') as arquivo:
+    arquivo.write("EMPRESA;JOGO;TITULO DO COMENTÁRIO;COMENTÁRIO;NOTA;DATA;OPINIÃO DAS PESSOAS SOBRE O COMENTÁRIO"+"\n")
+
+#buscar_jogos_da_empresa("Nintendo||||The Legend of Zelda: Breath of the Wild||||Super Mario Odyssey||||Animal Crossing: New Horizons||||The Legend of Zelda: Tears of the Kingdom||||Metroid Dread")
+
+
+with open('dados/lista_de_pesquisa.csv','r',encoding = 'utf-8') as arquivo:
+    i=1
+    for info in arquivo:
+        #print(info)
+        
+        buscar_jogos_da_empresa(info.strip())
+        i+=1
