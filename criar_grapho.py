@@ -73,7 +73,7 @@ def arvore_de_conxoes(perfis_varridos, url_0,_username_link):
     #_username_link = adicionar_pessoas_no_dicionario({}, amigos[0])
     usuarios = adicionar_nomes_no_dicionario(set(), amigos[0])
     contador = len(_username_link)
-    num_max = 50000
+    num_max = 120
     nos={}
     
     for individuo in amigos[0]:
