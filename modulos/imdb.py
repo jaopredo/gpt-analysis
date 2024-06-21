@@ -2,97 +2,116 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
-def pegar_lista_empresas():
-    lista = []
-    with open('dados/lista_de_pesquisa.csv', 'r', encoding='utf-8') as arquivo:
-        for li in arquivo:
-            lista.append(li)
-        return li
 
-def achar_url(jogo):
-    jogo = re.sub(' ', '+',jogo) + "+game+imdb"
-    link = f"https://www.google.com.br/search?q={jogo}"
+def find_url(game):
+    """
+    Search on google the imdb site for an specific game
+    
+    """
+    
+    game = re.sub(' ', '+',game) + "+game+imdb"
+    link = f"https://www.google.com.br/search?q={game}" #search
     page = requests.get(link)
     soup = BeautifulSoup(page.text,"lxml")
-    fatia = soup.find("div", class_="egMi0 kCrYT")
+    fatia = soup.find("div", class_="egMi0 kCrYT") #extract the best result
     link = fatia.find("a")
-    link = link['href']
-    link = re.search(r'/url\?q=(.+?)&sa=',link).group(1)
-    return(link+"reviews/?ref_=tt_ov_rt")    
+    link = link['href'] #gets the link
+    link = re.search(r'/url\?q=(.+?)&sa=',link).group(1) #filters only the good part
+    return(link+"reviews/?ref_=tt_ov_rt")    #return the review link
     
-achar_url("the last of us")
-
-def info_pessoa(pessoa):
+def info_person(person):
     """
-    Pega o comentário de uma pessoa e extrai os dados dele
+    recives an commentary and extracts all the information needed
+    
     """
-    lista_pessoal=[]
-    titulo = re.sub(';','.', pessoa.find("a", class_="title").text.strip())
-    comentario = re.sub(';','.',pessoa.find("div", class_="text show-more__control").text.strip())
-    comentario = re.sub(r'\s+', ' ', comentario)
-    comentario = re.sub(r'\n', ' ',comentario)
-    #print(titulo)
+    
+    personal_list=[]
+    title = re.sub(';','.', person.find("a", class_="title").text.strip())
+    comment = re.sub(';','.',person.find("div", class_="text show-more__control").text.strip()) #gets the commentary part 
+    comment= re.sub(r'\s+', ' ', comment)#cleans the commentary
+    comment = re.sub(r'\n', ' ',comment)#cleans it even more
+    
     try:
-        nota = pessoa.find("span", class_="rating-other-user-rating").text.strip()
+        rate = person.find("span", class_="rating-other-user-rating").text.strip() #gets the rate of the person, if it does not work, the person did not gave us an final rate
     except:
-        nota = "Not Informed"
-    data = pessoa.find("span", class_="review-date").text.strip()
-    opiniao_pessoas = pessoa.find("div", class_="actions text-muted").text.strip().split('  ')[0]
-    lista_pessoal.append(titulo)
-    lista_pessoal.append(comentario)
-    lista_pessoal.append(nota)
-    lista_pessoal.append(data)
-    lista_pessoal.append(opiniao_pessoas)
-    return lista_pessoal
+        rate = "Not Informed" 
+        
+    date = person.find("span", class_="review-date").text.strip()
+    
+    people_opinion = person.find("div", class_="actions text-muted").text.strip().split('  ')[0]
+    
+    #Now we append all the information of the person we just got
+    personal_list.append(title)
+    personal_list.append(comment)
+    personal_list.append(rate)
+    personal_list.append(date)
+    personal_list.append(people_opinion)
+    
+    return personal_list #returns the person list 
 
-def buscar_informacoes_do_jogo(jogo):
-    link = achar_url(jogo)
-    page = requests.get(link)
+def search_for_game_information(game):
+    """
+    recives an game and extracts the data from it
+    
+    """
+    
+    link = find_url(game) #gets the commentary link of that game
+    page = requests.get(link) 
     soup = BeautifulSoup(page.text, "lxml")
     
-    info_pessoas = soup.find_all("div", class_="lister-item mode-detail imdb-user-review collapsable")
-    lista_jogo = [] #contém os comentários de um certo jogo
-    contagem = 1
+    people_info = soup.find_all("div", class_="lister-item mode-detail imdb-user-review collapsable") #gets all the commentaries available on the page
+    game_list = [] #contém os comentários de um certo jogo
+    count = 1
     #Para cada comentário irá se extrair os dados:
-    for pessoa in info_pessoas:
-        if(contagem>20):
+    for person in people_info:
+        if(count>20): #if the count exceed 20, it will not search for more
             break
-        #Aqui se extrai tudo que é necessário do comentário
-        lista_pessoal= info_pessoa(pessoa) #contém informações, nesta ordem:[titulo,comentario,nota,data,opiniao_pessoas]
-        lista_jogo.append(lista_pessoal)
-        contagem+=1    
+        #Here we extract everything from an commentary:
+        personal_list = info_person(person) #contain information, in this order[title,commentary,rate,date,people_opinion]
+        game_list.append(personal_list) #appends the information we just got 
+        count+=1    
         
-    return lista_jogo
+    return game_list #returns all the commentaries we got on a list
 
-def escrever(lista_comentarios_empresa):
-    with open('dados/imdb.csv', 'a', encoding = 'utf-8') as arquivo:
-        empresa = lista_comentarios_empresa[0]
-        for game in lista_comentarios_empresa[1:]:
-            jogo = game[0]
-            lista = game[1]
-            for pessoa in lista:
-                arquivo.write(f"{empresa};{jogo};{pessoa[0]};{pessoa[1]};{pessoa[2]};{pessoa[3]};{pessoa[4]}")
-                
-def buscar_jogos_da_empresa(info):
-    #info está neste formato:Empresa1||||jogo_grande_1||||jogo_grande_2||||jogo_grande_3||||jogo_recente_1||||jogo_recente_2
-    info = info.split('||||')
-    empresa = info[0]
-    jogos = info[1:]
-    lista_comentarios_empresa = [empresa]
-    for jogo in jogos:
-        lista_comentarios_empresa.append([jogo,buscar_informacoes_do_jogo(jogo)])
-    escrever(lista_comentarios_empresa)
+def write(commentaries_list_company):
+    """
+    This function is used to write the data on an .csv file    
+    """
     
-with open('dados/imdb.csv', 'w',encoding='utf-8') as arquivo:
-    arquivo.write("EMPRESA;JOGO;TITULO DO COMENTÁRIO;COMENTÁRIO;NOTA;DATA;OPINIÃO DAS PESSOAS SOBRE O COMENTÁRIO"+"\n")
+    with open('dados/imdb.csv', 'a', encoding = 'utf-8') as file:
+        company = commentaries_list_company[0]
+        for _game_ in commentaries_list_company[1:]: #for each information in the list, it will write it on the .csv file
+            game = _game_[0] # catch the game
+            lista = _game_[1] #cath the info about the game
+            for person in lista: #for each person that commented on the game:
+                file.write(f"{company};{game};{person[0]};{person[1]};{person[2]};{person[3]};{person[4]}")
+                
+def search_for_company_games(info):
+    """
+    Search for the information of each game in the company
+    """
+    
+    #'info' is on this format:Company1||||big_game_1||||big_game_2||||big_game_3||||recent_game_1||||recent_game_2
+    info = info.split('||||') #Transform the string in a list, so we can extract the information 
+    company= info[0]
+    games = info[1:]
+    commentaries_list_company = [company]
+    for game in games: #for each game of the company, it will extract the data needed 
+        commentaries_list_company.append([game,search_for_game_information(game)]) #calls the function search_for_game_information() 
+    write(commentaries_list_company)
 
-#buscar_jogos_da_empresa("Nintendo||||The Legend of Zelda: Breath of the Wild||||Super Mario Odyssey||||Animal Crossing: New Horizons||||The Legend of Zelda: Tears of the Kingdom||||Metroid Dread")
-
-
-with open('dados/lista_de_pesquisa.csv','r',encoding = 'utf-8') as arquivo:
-    i=1
-    for info in arquivo:
-        #print(info)
-        
-        buscar_jogos_da_empresa(info.strip())
-        i+=1
+def imdb():    
+    """
+    This Function do all the work needed in order to get the data from imdb
+    """
+    
+    with open('dados/imdb.csv', 'w',encoding='utf-8') as arquivo:
+        arquivo.write("COMPANY;GAME;COMMENTARY TITLE;COMMENTARY;RATE;DATE;GENERAL OPINION ABOUT THE COMMENTARY"+"\n") #Every time the program starts, it will crate an new file
+    
+    with open('dados/lista_de_pesquisa.csv','r',encoding = 'utf-8') as arquivo: #Opens the file that contains all the information required in order to start the program
+        i=1
+        for info in arquivo:
+            search_for_company_games(info.strip()) #Do the work for each line
+            i+=1
+            
+imdb()
