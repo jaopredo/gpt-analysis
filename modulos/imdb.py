@@ -4,7 +4,7 @@ import re
 
 def pegar_lista_empresas():
     lista = []
-    with open('lista_de_pesquisa.csv', 'r', encoding='utf-8') as arquivo:
+    with open('dados/lista_de_pesquisa.csv', 'r', encoding='utf-8') as arquivo:
         for li in arquivo:
             lista.append(li)
         return li
@@ -72,6 +72,7 @@ def escrever(lista_comentarios_empresa):
             lista = game[1]
             for pessoa in lista:
                 arquivo.write(f"{empresa};{jogo};{pessoa[0]};{pessoa[1]};{pessoa[2]};{pessoa[3]};{pessoa[4]}")
+                
 def buscar_jogos_da_empresa(info):
     #info está neste formato:Empresa1||||jogo_grande_1||||jogo_grande_2||||jogo_grande_3||||jogo_recente_1||||jogo_recente_2
     info = info.split('||||')
