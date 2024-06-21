@@ -69,23 +69,38 @@ def arrumar_opinioes(opinioes):
     if opinioes == 'N/I': #caso 4
         return ['N/I', 'N/I']
     
-    opinioes = opinioes.split('\t')[0]
-    if 'helpful' and 'funny' in opinioes: #caso 1
-        opinioes = re.search(r'(.+) people found this review helpful(.+) people found this review funny',opinioes)
-        helpful = opinioes.group(1)
-        funny = opinioes.group(2)
-        return [helpful, funny]
-    
+    option = opinioes.split('\t')[0]
+    #print('---------',opinioes)
+    if 'helpful' and 'funny' in opinioes: #caso 
+        try:
+            opinioes = re.search(r'(.+) people found this review helpful(.+) people found this review funny',option)
+            helpful = opinioes.group(1)
+            funny = opinioes.group(2)
+            return [helpful, funny]
+        except:
+            opinioes = re.search(r'(.+) people',option)
+            helpful = opinioes.group(1)
+            funny = 1
+            return [helpful, funny]
+            
     if 'helpful' in opinioes: #caso 2
-        opinioes = re.search(r'(.+) people found this review helpful(.+)',opinioes)
-        helpful = opinioes.group(1)
-        return [helpful,'N/I']
-    
+        try: 
+            opinioes = re.search(r'(.+) people found this review helpful',option)
+            helpful = opinioes.group(1)
+            return [helpful,'N/I']
+        except:
+            opinioes = re.search(r'(.+) person found this review helpful',option)
+            helpful = opinioes.group(1)
+            return [helpful,'N/I']
     if 'funny' in opinioes: #caso 3
-        opinioes = re.search(r'(.+) people found this review funny',opinioes)
-        funny = opinioes.group(2)
-        return ['N/I', funny]
-    
+        try:
+            opinioes = re.search(r'(.+) people found this review funny',option)
+            funny = opinioes.group(2)
+            return ['N/I', funny]
+        except:
+            opinioes = re.search(r'(.+) person found this review funny',option)
+            funny = opinioes.group(2)
+            return ['N/I', funny]
 
 def  coletar_dados(pessoa):
     """
@@ -132,15 +147,29 @@ def coletar_preco(tabela_valores):
     Aqui se busca coletar o preço de um jogo em específico, cuidando dos parâmentros desconto e valor cheio
     """
     try: #desconsiderando o desconto:
-        preco_jogo = tabela_valores.find("div", class_="game_purchase_price price").text.strip()
-        return preco_jogo
+        precos = tabela_valores.find_all("div", class_="game_purchase_price price")
+        if precos != []:
+            for preco_jogo in precos:
+                print(preco_jogo.text.strip())
+                if 'Free' in preco_jogo.text.strip():
+                    return 'R$ 00,00'
+                if 'DEMO' in preco_jogo.text.strip():
+                    continue
+                if '$' not in preco_jogo.text.strip():
+                    continue
+                if preco_jogo != None:
+                    return preco_jogo.text.strip()
+        print(precos.group(1)) #forçando um erro acontecer caso não haja preço aqui
     except:
         try: #considerando que o jogo esteja com desconto e possa ser vendido separadamente:
             frase = tabela_valores.find("div", class_="discount_block game_purchase_discount").text # pega uma frase com valores de desconto e preço final
             desconto = tabela_valores.find("div", class_="discount_pct").text.strip()[1:]
             preco_original = tabela_valores.find("div", class_="discount_original_price").text.strip()
-            preco_final = tabela_valores.find("div", class_="discount_final_price").text.strip()   
-            return preco_final
+            preco_final = tabela_valores.find("div", class_="discount_final_price").text.strip()
+            if(preco_final != None):
+                return preco_final
+            print("a")
+            preco = preco_final.group(1) #forçando o erro acontecer
         except:
             try: #considerando que haja desconto no preço por compra de pacotes:
                 preco_final = tabela_valores.find("div", class_="discount_final_price").text[3:]
@@ -151,12 +180,19 @@ def coletar_preco(tabela_valores):
                 desconto = float(desconto)/100
                 preco_final = float(preco_final)
                 preco_original = preco_final/(1-desconto)
-
-                return(preco_original)
-                
+                if preco_original != None:
+                    preco_original = re.sub('.',',',preco_original)
+                    print(preco_original)
+                    return(preco_original)
+                preco = preco_final.group(1)
             except:
-                print("preço")
-        
+                try:
+                    preco = tabela_valores.find("div",class_="discount_final_price").text.strip()
+                    print(preco)
+                    return preco
+                except:                    
+                    print("preço")
+            
 
     
 def coletar_genero(soup):
@@ -166,12 +202,12 @@ def coletar_genero(soup):
     try:
         tabela = soup.find("div", class_="details_block") # pega algumas informacoes
         genero = re.search(r'Genre:(.+)\n',tabela.text).group(1).strip() # pega o genero do jogo
-        return genero
+        return genero.split()[0]
     except:
         try:
             tabela = soup.find("div", class_="block_content_inner")
             genero = re.search(r'Genre:(.+)\n',tabela.text).group(1).strip()
-            return genero
+            return genero.split()[0]
         except:
             print("genero")
             
@@ -183,7 +219,7 @@ def coletar_informacoes_do_jogo(jogo):
     
     id_jogo,link_main = pesquisa_google(jogo) # pega o link da pagina principal do jogo na steam e também o id dele 
     page = requests.get(link_main)
-    print(jogo,'---',link_main)
+    print(jogo.strip(),'---',link_main)
     soup = BeautifulSoup(page.text,"lxml")
     genero = coletar_genero(soup)
     dados_comentarios = coletar_comentarios(link_main,id_jogo)    #coleta os comentarios daquele jogo
@@ -193,18 +229,18 @@ def coletar_informacoes_do_jogo(jogo):
     return [genero, dados_comentarios,preco_jogo]
 
 def steam():
-    with open('dados/lista_de_pesquisa.csv','r',encoding = 'utf-8') as arquivo:
+    with open('dados/steam_list.csv','r',encoding = 'utf-8') as arquivo:
         for linha in arquivo: #cada linha está nessa forma : Epic Games||||Fortnite||||Gears of War||||Infinity Blade||||Fortnite Chapter 2 Season 8||||Tony Hawk's Pro Skater 1+2
             lista = linha.split('||||')
             empresa = lista[0].strip()
-            print(empresa)
+            print('\n\n',empresa)
             for jogo in lista[1:]:
                # print(jogo.strip())
                 try:
                     genero, dados_comentarios, preco_jogo = coletar_informacoes_do_jogo(jogo)
                     escrever(empresa,jogo.strip(),genero,preco_jogo,dados_comentarios)
                 except Exception as error:
-                    print("")
+                    print('#############',error)
 
 def escrever(empresa,jogo,genero,preco_jogo,dados_comentarios):
     with open('dados/steam.csv', 'a', encoding = 'utf-8' ) as arquivo:
@@ -217,7 +253,7 @@ with open('dados/steam.csv', 'w', encoding = 'utf-8') as arquivo:
 
     
 steam()
-#coletar_informacoes_do_jogo("Dark Souls Remastered")
+#coletar_informacoes_do_jogo("Grand Theft Auto V")
 #coletar_informacoes_do_jogo("Grand Theft Auto: The Trilogy - The Definitive Edition")
     
     
