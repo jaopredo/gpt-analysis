@@ -2,10 +2,10 @@ import concurrent.futures
 from ai import client
 import pandas as pd
 from functions.utils import *
+from functions.analytics.utils import *
 import unicodedata
 import configs
 import json
-import threading
 import openai
 from time import sleep
 
@@ -16,7 +16,6 @@ def get_comment_scale(comment: str, n: int) -> None:
     :param comments_on_scale_column: Lista com todas as notas
     """
     try:
-        print(f"{n} calculada")
         response: str = client.chat.completions.create(
             messages=[
                 {
@@ -27,14 +26,16 @@ def get_comment_scale(comment: str, n: int) -> None:
             model="gpt-3.5-turbo",
             temperature=0
         )
+        print(f"{n} calculada")
 
         return response.choices[0].message.content  # Adicionando comentários no json
-    except openai.OpenAIError as e:
-        print("\n\n\n\n\n\n" + "="*20)
-        print("DEU BOSTA AQUI Ó")
-
-        sleep(10)
-        return get_comment_scale(comment, n)
+    except openai.OpenAIError as e:  # Se o chatgpt retornar um erro de tokens
+        print('\n\n =================================')
+        print(f"Erro na {n}, tentando calcular novamente!")
+        print(' ================================= \n\n')
+        print(e)
+        sleep(5)  # Espero 10 segundos
+        return get_comment_scale(comment, n)  # Tento executar novamente a função
 
 
 # Função que transforma a avaliação do comentário em uma escala numérica
@@ -63,8 +64,5 @@ def analyse_comments(dataframe: pd.DataFrame) -> None:#
             comments_on_scale.append(thread.result())
     
     # sorted_comments = sorted(comments_on_scale_to_convert, key=lambda d: d["id"])
-
-    for rate in comments_on_scale:
-        print(rate)
     
     dataframe['COMENTARIO_COMO_NOTA'] = comments_on_scale

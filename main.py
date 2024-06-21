@@ -1,9 +1,10 @@
 import pandas as pd
 from analytics import *
+from scraping import *
 
 def main():
     # Realizando a raspagem de dados
-    ...
+    # scrap_from_web()
     
     # Executando a limpeza dos dados
     ...

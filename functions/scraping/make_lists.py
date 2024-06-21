@@ -1,13 +1,9 @@
 """
 Module that consults with gpt chat and generates the companies and games database
 """
-
-from openai import OpenAI
+from ai import client
 import re
 
-api_key = "sk-proj-Kcot2dNCx7CwhssgFr56T3BlbkFJikrwx8Qe5v9IMQloSY7E"
-client = OpenAI(api_key=api_key)
-    
 
 def make_steam_list():
     """

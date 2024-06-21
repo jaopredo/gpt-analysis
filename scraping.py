@@ -1,0 +1,3 @@
+
+def scrap_from_web():
+    ...
