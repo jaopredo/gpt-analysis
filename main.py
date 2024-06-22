@@ -1,6 +1,6 @@
 import pandas as pd
 from functions.analytics.scale import analyse_comments
-from functions.analytics.tables import generate_help_tables
+from functions.analytics.tables import generate_help_tables, update_table_with_indexes
 from scraping import *
 
 def main():
@@ -12,7 +12,8 @@ def main():
     # dataset_imdb = pd.read_csv('data/steam.csv', on_bad_lines="skip", sep=";")
     
     # Criando tabelas auxiliares
-    generate_help_tables(dataset_steam)
+    game_companies_table, games_table = generate_help_tables(dataset_steam)
+    update_table_with_indexes(df=dataset_steam, games_companies_table=game_companies_table, games_table=games_table)
     
     # analyse_comments(dataset_steam)
     # generate_analytics(dataset_imdb)
