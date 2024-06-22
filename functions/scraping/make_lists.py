@@ -1,12 +1,14 @@
 """
 Module that consults with gpt chat and generates the companies and games database
 """
+
 from ai import client
 import re
     
 
 def make_steam_list():
     """
+
         crete file csv with especify formated for steam games    
     """
 
@@ -30,6 +32,7 @@ def make_steam_list():
         ) 
 
         file.write(response.choices[0].message.content)
+
 
 def make_imdb():
     """

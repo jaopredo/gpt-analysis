@@ -1,11 +1,13 @@
 import pandas as pd
-import numpy as np
 
-from functions.analytics import *
+from functions.analytics.scale import *
+from functions.analytics.dates import *
 
 
-def generate_analytics(dataset):
+def generate_analytics(dataset: pd.DataFrame):
     """
         Função que gera as análises necessárias para criação de gráficos específicos
     """
-    analyse_comments(dataset)
+    # analyse_comments(dataset)
+
+    generate_timeline(dataset)

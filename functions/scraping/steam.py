@@ -1,3 +1,7 @@
+'''
+This module we'll collect games info that are on Steam 
+'''
+
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -6,14 +10,16 @@ import time
 
 def pesquisa_google(jogo):
     """
-    Pesquisa um jogo no google e pega o link da steam válido
+    Here we search a game on google and takes the valid Steam link
     """
+
     #https://www.bing.com/search?q=dead+by+daylight+steam
-    jogo = re.sub(' ','+', jogo) #substitui os espaços em branco por +
+    jogo = re.sub(' ','+', jogo)   # replace the blank spaces for +
     url_google = f"https://www.google.com/search?q={jogo}steam"
     page = requests.get(url_google)
     soup = BeautifulSoup(page.text,"lxml")
     fatias = soup.find_all("div", class_="egMi0 kCrYT")
+
     for fatia in fatias:    
         try:
             link = fatia.find("a")
@@ -21,26 +27,28 @@ def pesquisa_google(jogo):
             id_jogo = re.search(r'/app/(\d+)', link).group(1)                    
             link = f"https://store.steampowered.com/app/{id_jogo}"
             #print(link)
-            return [id_jogo,link]    #retorna o link do jogo na Steam para o programa
+            return [id_jogo,link]   # return the Steam game link to the code
         except:
             continue
    
+
 def arrumar_data(data):
     """
-    Aqui se arruma a fromatação da data, pois ela entra assim: Posted : data(com vírgula e alguns sem o ano)
+    Here we fix the date format. It comes like this: Posted : date (with a comma and some without the year number) 
     """
-    data = re.search(r'Posted: (.+)',data).group(1) #pega a data
-    data = re.sub(',', '',data) #Retira-se a vírgula
+
+    data = re.search(r'Posted: (.+)',data).group(1)  # take the date
+    data = re.sub(',', '',data)   # cut the comma
     
     cont = 0
     for i in data:
         if i == ' ':
             cont+=1
     if cont == 1:
-        data = data + " 2024" #caso não contenha o ano, adiociona-se o ano de 2024.
+        data = data + " 2024"  # in case the year doesn't appear, we add '2024'
     
     dia = int(data[0:2])
-    resto = data[2:].strip() # o resto contém tudo que não é o dia
+    resto = data[2:].strip()  #  function 'resto' contains everything that isn't the day number
     ano = resto[-4:]
     dicio = {'January': '01',
              'February': '02',
@@ -60,18 +68,20 @@ def arrumar_data(data):
     
     return data
 
+
 def arrumar_opinioes(opinioes):
     """
-    Aqui se arruma e formata as opiniões. 
+    Function to fix and format the reviews. 
     """
     
-    #Cada comentário pode ser de até 4 tipos: helpful-funny(1), helpful(2), funny(3) e, ainda, nenhum dos dois(4):
-    if opinioes == 'N/I': #caso 4
-        return ['N/I', 'N/I']
-    
+    # each comment has up to 4 types: helpful-funny(1), helpful(2), funny(3) and, neither(4):
+
+    if opinioes == 'N/I':  # case 4
+        return ['N/I', 'N/I'] 
     option = opinioes.split('\t')[0]
     #print('---------',opinioes)
-    if 'helpful' and 'funny' in opinioes: #caso 
+
+    if 'helpful' and 'funny' in opinioes:  # case 1 
         try:
             opinioes = re.search(r'(.+) people found this review helpful(.+) people found this review funny',option)
             helpful = opinioes.group(1)
@@ -83,7 +93,7 @@ def arrumar_opinioes(opinioes):
             funny = 1
             return [helpful, funny]
             
-    if 'helpful' in opinioes: #caso 2
+    if 'helpful' in opinioes:  # case 2
         try: 
             opinioes = re.search(r'(.+) people found this review helpful',option)
             helpful = opinioes.group(1)
@@ -92,7 +102,8 @@ def arrumar_opinioes(opinioes):
             opinioes = re.search(r'(.+) person found this review helpful',option)
             helpful = opinioes.group(1)
             return [helpful,'N/I']
-    if 'funny' in opinioes: #caso 3
+
+    if 'funny' in opinioes:  #case 3
         try:
             opinioes = re.search(r'(.+) people found this review funny',option)
             funny = opinioes.group(2)
@@ -102,51 +113,55 @@ def arrumar_opinioes(opinioes):
             funny = opinioes.group(2)
             return ['N/I', funny]
 
+
 def  coletar_dados(pessoa):
     """
-    Aqui se oletam as informções de um comentário em específico
+    Here we collect info about a especific comment
     """
     
-    #coletando:
+    # collecting:
     data = pessoa.find("div", class_="date_posted").text.strip()
-    horas = pessoa.find("div", class_="hours").text.strip() #está na forma {horas} hrs on record
-    comentario = pessoa.find("div", class_="apphub_CardTextContent").text.strip() #pega um gande bloco de texto que contém a data e o comentário em si
+    horas = pessoa.find("div", class_="hours").text.strip()  # it is on this format: '{horas} hrs on record'
+    comentario = pessoa.find("div", class_="apphub_CardTextContent").text.strip() # take a large block of code that contains the date and the comment
     opiniao_final = pessoa.find("div", class_="title").text.strip()
     try:
         opinioes = pessoa.find("div", class_="found_helpful").text.strip()
     except:
         opinioes = "N/I"
         
-    #limpando:
-    data = arrumar_data(data) #limpo a data
-    horas = re.search(r'(.+) hrs on record',horas).group(1) #limpo a hora
-    comentario = re.search(r'Posted: (.+)\n(.+)',comentario).group(2).strip() #pega somente o comentario
-    comentario = re.sub(';', '.', comentario) # subistitui os ; por . para evitar erros de formatação no excel
+    # cleaning:
+    data = arrumar_data(data)  # clean the date number
+    horas = re.search(r'(.+) hrs on record',horas).group(1)  # clean the hour number
+    comentario = re.search(r'Posted: (.+)\n(.+)',comentario).group(2).strip()  # take only the comment
+    comentario = re.sub(';', '.', comentario)  # replace ';' for '.' to avoid formatting errors on Excel
     helpful,funny = arrumar_opinioes(opinioes)
-    return [comentario, opiniao_final, horas, data, helpful, funny] #retorna uma lista na ordem especificada ali
+    return [comentario, opiniao_final, horas, data, helpful, funny]  # return a list in the specified order we want
     
-def coletar_comentarios(link_main,id_jogo):
+
+def coletar_comentarios(link_main, id_jogo):
     """
-    Aqui se coletam as informações dos comentários em um jogo
+    Here we collect the comments infos about a game
     """
     
-    link_comentarios = f"https://steamcommunity.com/app/{id_jogo}/reviews/?browsefilter=toprated&snr=1_5_100010_" # o link do site
+    link_comentarios = f"https://steamcommunity.com/app/{id_jogo}/reviews/?browsefilter=toprated&snr=1_5_100010_"  # the link
     page = requests.get(link_comentarios)
-    #print(link_main)
     soup = BeautifulSoup(page.text, "lxml")
-    comentarios = soup.find_all("div",  class_="apphub_UserReviewCardContent") #pega todos os comentários e cria uma lista
-    dados_comentarios = [] # lista onde seram guardados todos os comentários coletados do jogo 
-    for pessoa in comentarios: #para cada comentário faz a coleta e limpagem
-        dados_comentario = coletar_dados(pessoa) #coleta os dados em uma lista
+    comentarios = soup.find_all("div",  class_="apphub_UserReviewCardContent")  # take all the comments and create a list
+    dados_comentarios = []  # list that will keep all the collected comments
+
+    for pessoa in comentarios:  # for each comment, collect and clean
+        dados_comentario = coletar_dados(pessoa)  # collect the data on a list
         dados_comentarios.append(dados_comentario)
     
     return dados_comentarios
 
+
 def coletar_preco(tabela_valores):
     """
-    Aqui se busca coletar o preço de um jogo em específico, cuidando dos parâmentros desconto e valor cheio
+    Here we'll collect the price of a specific game, caring about the discount and the whole price
     """
-    try: #desconsiderando o desconto:
+
+    try:  # desconsidering the discount:
         precos = tabela_valores.find_all("div", class_="game_purchase_price price")
         for preco_jogo in precos:
             print(preco_jogo.text.strip())
@@ -159,38 +174,37 @@ def coletar_preco(tabela_valores):
             if preco_jogo != None:
                 return preco_jogo.text.strip()
     except:
-        try: #considerando que o jogo esteja com desconto e possa ser vendido separadamente:
-            frase = tabela_valores.find("div", class_="discount_block game_purchase_discount").text # pega uma frase com valores de desconto e preço final
+        try:  # considering that the game has the discount:
+            frase = tabela_valores.find("div", class_="discount_block game_purchase_discount").text  # take a phrase with the discount and the final price
             desconto = tabela_valores.find("div", class_="discount_pct").text.strip()[1:]
             preco_original = tabela_valores.find("div", class_="discount_original_price").text.strip()
             preco_final = tabela_valores.find("div", class_="discount_final_price").text.strip()
             
             return preco_final
         except:
-            try: #considerando que haja desconto no preço por compra de pacotes:
+            try:  # considering that there is a discount on the price for buying DLCs:
                 preco_final = tabela_valores.find("div", class_="discount_final_price").text[3:]
-                preco_final = re.sub(',','.',preco_final) #retira as virgulas
-                preco_final = re.sub(' ','',preco_final) #retira os espaçoes em branco
+                preco_final = re.sub(',','.',preco_final)  # take out the commas
+                preco_final = re.sub(' ','',preco_final)  # take out the blank spaces
                 desconto = tabela_valores.find("div", class_="bundle_base_discount").text.strip()[1:-1]
-                desconto = re.sub(' ', '',desconto) #retira espaço em branco
+                desconto = re.sub(' ', '',desconto)  # take out blank spaces, again
                 desconto = float(desconto)/100
                 preco_final = float(preco_final)
                 preco_original = preco_final/(1-desconto)
 
                 return(preco_original)
-                
             except:
                 print("preço")
         
-
-    
+   
 def coletar_genero(soup):
     """
-    Aqui se coleta o gênero do jogo
+    Here we collect the game category
     """
+
     try:
-        tabela = soup.find("div", class_="details_block") # pega algumas informacoes
-        genero = re.search(r'Genre:(.+)\n',tabela.text).group(1).strip() # pega o genero do jogo
+        tabela = soup.find("div", class_="details_block")  # take some infos
+        genero = re.search(r'Genre:(.+)\n',tabela.text).group(1).strip() # take the game category
         return genero
     except:
         try:
@@ -203,31 +217,27 @@ def coletar_genero(soup):
                 
 def coletar_informacoes_do_jogo(jogo):
     """
-    Aqui se coletam as informações de um jogo
+    Here we collect the infos about a game
     """
     
-    id_jogo,link_main = pesquisa_google(jogo) # pega o link da pagina principal do jogo na steam e também o id dele 
+    id_jogo,link_main = pesquisa_google(jogo)  # take the game's home page link on Steam and his id
     page = requests.get(link_main)
     print(jogo,'---',link_main)
     soup = BeautifulSoup(page.text,"lxml")
     genero = coletar_genero(soup)
-    dados_comentarios = coletar_comentarios(link_main,id_jogo)    #coleta os comentarios daquele jogo
-    #preco_jogo = soup.find("div", class_="game_purchase_price price").text.strip() #coleta o preço do jogo
+    dados_comentarios = coletar_comentarios(link_main,id_jogo)  # collect the comments about the game
     tabela_valores = soup.find("div", class_="game_area_purchase")
     preco_jogo = coletar_preco(tabela_valores)
     return [genero, dados_comentarios,preco_jogo]
 
+
 def steam():
-    with open('dados/steam.csv', 'w', encoding = 'utf-8') as arquivo:
-        arquivo.write('EMPRESA;JOGO;GÊNERO;PREÇO;COMENTARIO;OPINIAO FINAL; HORAS DE JOGO DO USUÁRIO; DATA DE PUBLICAÇÃO DO COMENTÁRIO; HELPFUL; FUNNY;\n')
-    
     with open('dados/steam_list.csv','r',encoding = 'utf-8') as arquivo:
-        for linha in arquivo: # cada linha está nessa forma : Epic Games||||Fortnite||||Gears of War||||Infinity Blade||||Fortnite Chapter 2 Season 8||||Tony Hawk's Pro Skater 1+2
+        for linha in arquivo:  # each line is in this format : 'Epic Games||||Fortnite||||Gears of War||||Infinity Blade||||Fortnite Chapter 2 Season 8||||Tony Hawk's Pro Skater 1+2'
             lista = linha.split('||||')
             empresa = lista[0].strip()
             print('\n\n',empresa)
             for jogo in lista[1:]:
-               # print(jogo.strip())
                 try:
                     genero, dados_comentarios, preco_jogo = coletar_informacoes_do_jogo(jogo)
                     escrever(empresa,jogo.strip(),genero,preco_jogo,dados_comentarios)
@@ -238,6 +248,14 @@ def steam():
 def escrever(empresa,jogo,genero,preco_jogo,dados_comentarios):
     with open('dados/steam.csv', 'a', encoding = 'utf-8' ) as arquivo:
         for info in dados_comentarios:
-            #comentario, opiniao_final, horas, data, helpful, funny
-            arquivo.write(f'{empresa};{jogo};{genero};{preco_jogo};{info[0]};{info[1]};{info[2]};{info[3]};{info[4]};{info[5]}\n')    
+            # comment, final opinion, hours, date, helpful, funny
+            arquivo.write(f'{empresa};{jogo};{genero};{preco_jogo};{info[0]};{info[1]};{info[2]};{info[3]};{info[4]};{info[5]}\n')
+
+
+with open('dados/steam.csv', 'w', encoding = 'utf-8') as arquivo:
+    arquivo.write('GAME STUDIO;GAME NAME;CATEGORY;PRICE;COMMENT;FINAL OPINION;HOURS SPENT;DATE OF THE COMMENT; HELPFUL; FUNNY;\n')
+
     
+steam()
+#coletar_informacoes_do_jogo("Prey")
+#coletar_informacoes_do_jogo("Grand Theft Auto: The Trilogy - The Definitive Edition")
