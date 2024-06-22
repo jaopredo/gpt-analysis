@@ -11,7 +11,7 @@ def main():
 
     # Passando os dados
     dataset_steam = pd.read_csv('data/steam.csv', on_bad_lines="skip", sep=";")
-    dataset_imdb = pd.read_csv('data/steam.csv', on_bad_lines="skip", sep=";")
+    dataset_imdb = pd.read_csv('data/imdb.csv', on_bad_lines="skip", sep=";")
 
     
     generate_analytics(dataset_steam)
@@ -20,7 +20,7 @@ def main():
 
     # Gerando o novo dataset
     dataset_steam.to_csv('data/new_steam.csv', sep=';')
-    dataset_imdb.to_csv('data/new_steam.csv', sep=';')
+    dataset_imdb.to_csv('data/new_imdb.csv', sep=';')
 
 
 
