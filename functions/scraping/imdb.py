@@ -113,5 +113,3 @@ def imdb():
         for info in arquivo:
             search_for_company_games(info.strip()) #Do the work for each line
             i+=1
-            
-imdb()
