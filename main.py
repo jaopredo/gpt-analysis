@@ -10,9 +10,9 @@ def main():
     ...
 
     # Passando os dados
-    dataset_steam = pd.read_csv('data/steam.csv', on_bad_lines="skip", sep=";")
+    dataset_steam = pd.read_csv('data/steam_copy.csv', on_bad_lines="skip", sep=";")
     dataset_imdb = pd.read_csv('data/imdb.csv', on_bad_lines="skip", sep=";")
-
+    print(dataset_imdb.columns)
     
     generate_analytics(dataset_steam)
     generate_analytics(dataset_imdb)

@@ -232,7 +232,10 @@ def coletar_informacoes_do_jogo(jogo):
 
 
 def steam():
-    with open('dados/steam_list.csv','r',encoding = 'utf-8') as arquivo:
+    with open('data/steam.csv', 'w', encoding = 'utf-8') as arquivo:
+        arquivo.write('GAME STUDIO;GAME NAME;CATEGORY;PRICE;COMMENT;FINAL OPINION;HOURS SPENT;DATE OF THE COMMENT; HELPFUL; FUNNY;\n')
+        
+    with open('data/steam_list.csv','r',encoding = 'utf-8') as arquivo:
         for linha in arquivo:  # each line is in this format : 'Epic Games||||Fortnite||||Gears of War||||Infinity Blade||||Fortnite Chapter 2 Season 8||||Tony Hawk's Pro Skater 1+2'
             lista = linha.split('||||')
             empresa = lista[0].strip()
@@ -246,16 +249,7 @@ def steam():
 
 
 def escrever(empresa,jogo,genero,preco_jogo,dados_comentarios):
-    with open('dados/steam.csv', 'a', encoding = 'utf-8' ) as arquivo:
+    with open('data/steam.csv', 'a', encoding = 'utf-8' ) as arquivo:
         for info in dados_comentarios:
             # comment, final opinion, hours, date, helpful, funny
             arquivo.write(f'{empresa};{jogo};{genero};{preco_jogo};{info[0]};{info[1]};{info[2]};{info[3]};{info[4]};{info[5]}\n')
-
-
-with open('dados/steam.csv', 'w', encoding = 'utf-8') as arquivo:
-    arquivo.write('GAME STUDIO;GAME NAME;CATEGORY;PRICE;COMMENT;FINAL OPINION;HOURS SPENT;DATE OF THE COMMENT; HELPFUL; FUNNY;\n')
-
-    
-steam()
-#coletar_informacoes_do_jogo("Prey")
-#coletar_informacoes_do_jogo("Grand Theft Auto: The Trilogy - The Definitive Edition")

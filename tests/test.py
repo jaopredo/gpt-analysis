@@ -1,24 +1,34 @@
-import concurrent.futures
-import time
+import json
 
-# Função que demora para executar
-def tarefa_demorada(n):
-    print(f"Iniciando tarefa {n}")
-    time.sleep(2)  # Simula uma tarefa que demora
-    print(f"Terminando tarefa {n}")
-    return f"Resultado da tarefa {n}"
-
-# Lista de tarefas a serem executadas
-tarefas = [1, 2, 3, 4, 5]
-resultados = []
-
-# Usando ProcessPoolExecutor para executar tarefas em paralelo
-with concurrent.futures.ProcessPoolExecutor() as executor:
-    # Submete todas as tarefas ao executor
-    futures = [executor.submit(tarefa_demorada, tarefa) for tarefa in tarefas]
-
-    # Espera até que todas as tarefas terminem
-    for future in concurrent.futures.as_completed(futures):
-        resultados.append(future.result())
-
-print(resultados)
+json.loads("""[
+    {"id": 660, "rate": 9},
+    {"id": 661, "rate": 8},
+    {"id": 662, "rate": 7},
+    {"id": 663, "rate": 6},
+    {"id": 664, "rate": 5},
+    {"id": 665, "rate": 8},
+    {"id": 666, "rate": 7},
+    {"id": 667, "rate": 9},
+    {"id": 668, "rate": 8},
+    {"id": 669, "rate": 7},
+    {"id": 670, "rate": 6},
+    {"id": 671, "rate": 8},
+    {"id": 672, "rate": 9},
+    {"id": 673, "rate": 7},
+    {"id": 674, "rate": 8},
+    {"id": 675, "rate": 9},
+    {"id": 676, "rate": 8},
+    {"id": 677, "rate": 9},
+    {"id": 678, "rate": 7},
+    {"id": 679, "rate": 8},
+    {"id": 680, "rate": 9},
+    {"id": 681, "rate": 6},
+    {"id": 682, "rate": 9},
+    {"id": 683, "rate": 8},
+    {"id": 684, "rate": 7},
+    {"id": 685, "rate": 9},
+    {"id": 686, "rate": 8},
+    {"id": 687, "rate": 9},
+    {"id": 688, "rate": 6},
+    {"id": 689, "rate": 7}
+]""")

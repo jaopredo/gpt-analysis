@@ -19,13 +19,15 @@ def get_comment_scale(comments: str, n: int) -> list[dict]:
             messages=[
                 {
                     "role": "user",
-                    "content": f"See this list of comments, convert them in a scale from 0 to 10, I want you to return only a JSON list of dictionaries, each one have an \'id\' key, you must not change it from the original, and a \'rate key\' with the number you calculated :\n \'{comments}\'"
+                    "content": f"See this list of comments, convert them in a scale from 0 to 10, I want you to return only a JSON list of dictionaries, each one have an \'id\' key, you must not change it from the original,  a \'rate key\' with the number you calculated, pass the entire dictionary in a single line :\n \'{comments}\'"
                 },
             ],
             model="gpt-3.5-turbo",
             temperature=0
         )
         print(f"{n} calculada")
+
+        print(response.choices[0].message.content)
 
         return json.loads(response.choices[0].message.content)  # Adicionando comentários no json
     except openai.OpenAIError as e:  # Se o chatgpt retornar um erro de tokens
@@ -74,7 +76,7 @@ def analyse_comments(dataframe: pd.DataFrame) -> None:#
     
     # Mando a coluna com os comentários para a função que vai retornar uma lista separada para que
     # Não envie tantos comentários ao mesmo tempo
-    comments_to_send_to_gpt = minimise_tokens_per_message(dataframe['COMENTARIO'])
+    comments_to_send_to_gpt = minimise_tokens_per_message(dataframe['COMMENT'])
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         threads_executing: list[concurrent.futures.Future] = []  # Threads executadas
@@ -87,10 +89,11 @@ def analyse_comments(dataframe: pd.DataFrame) -> None:#
         # Lista temporária que irá servir para organizar os cometários que foram retornados
         comments_on_scale_to_convert = []
 
-        for thread in threads_executing:
+        for i, thread in enumerate(threads_executing):
+            print(i)
             comments_on_scale_to_convert += thread.result()
         
     for comment in sorted(comments_on_scale_to_convert, key=lambda d: d['id']):
         comments_on_scale.append(comment['rate'])
     
-    dataframe['COMENTARIO_COMO_NOTA'] = comments_on_scale
+    dataframe['COMMENT AS RATE'] = comments_on_scale

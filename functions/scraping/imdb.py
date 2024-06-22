@@ -78,7 +78,7 @@ def write(commentaries_list_company):
     This function is used to write the data on an .csv file    
     """
     
-    with open('dados/imdb.csv', 'a', encoding = 'utf-8') as file:
+    with open('data/imdb.csv', 'a', encoding = 'utf-8') as file:
         company = commentaries_list_company[0]
         for _game_ in commentaries_list_company[1:]: #for each information in the list, it will write it on the .csv file
             game = _game_[0] # catch the game
@@ -105,10 +105,10 @@ def imdb():
     This Function do all the work needed in order to get the data from imdb
     """
     
-    with open('dados/imdb.csv', 'w',encoding='utf-8') as arquivo:
+    with open('data/imdb.csv', 'w',encoding='utf-8') as arquivo:
         arquivo.write("COMPANY;GAME;COMMENTARY TITLE;COMMENTARY;RATE;DATE;GENERAL OPINION ABOUT THE COMMENTARY"+"\n") #Every time the program starts, it will crate an new file
     
-    with open('dados/lista_de_pesquisa.csv','r',encoding = 'utf-8') as arquivo: #Opens the file that contains all the information required in order to start the program
+    with open('data/lista_de_pesquisa.csv','r',encoding = 'utf-8') as arquivo: #Opens the file that contains all the information required in order to start the program
         i=1
         for info in arquivo:
             search_for_company_games(info.strip()) #Do the work for each line
