@@ -12,7 +12,7 @@ def make_steam_list():
         crete file csv with especify formated for steam games    
     """
 
-    with open('dados/steam_list.csv', mode='w', newline='', encoding='utf-8') as file:
+    with open('data/steam_list.csv', mode='w', newline='', encoding='utf-8') as file:
         quantidade_empresas = 100
 
         gpt_message = f""" Hi, Please return a list with {quantidade_empresas} companies, along with five games from the company that are on Steam. The response must STRICTLY FOLLOW THIS FORMAT:
@@ -34,13 +34,13 @@ def make_steam_list():
         file.write(response.choices[0].message.content)
 
 
-def make_imdb():
+def make_imdb_list():
     """
 
         crete file csv with especify formated for steam games    
     """
 
-    with open('imdb_list.csv', mode='w', newline='', encoding='utf-8') as file:
+    with open('data/imdb_list.csv', mode='w', newline='', encoding='utf-8') as file:
         quantidade_empresas = 10
 
         gpt_message = f""" Hi, Please return a list with {quantidade_empresas} companies, along with five games from the company that are on Steam. The response must STRICTLY FOLLOW THIS FORMAT:

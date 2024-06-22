@@ -9,32 +9,34 @@ import openai
 from time import sleep
 
 
-def get_comment_scale(comments: str, n: int) -> list[dict]:
+def get_comment_scale(comment: str, n: int) -> list[dict]:
     """Função específica para realizar a ponte entre o CHATGPT e a conversão do comentário para uma escala de 0 a 10. Ela pega o comentário, manda pro GPT, retorna o valor e esse valor é adicionado na lista passada
     :param comment: Comentário pedido
     :param comments_on_scale_column: Lista com todas as notas
     """
     try:
-        response: str = client.chat.completions.create(
+        print(f"{n} sendo calculado")
+        response = client.chat.completions.create(
             messages=[
                 {
                     "role": "user",
-                    "content": f"See this list of comments, convert them in a scale from 0 to 10, I want you to return only a JSON list of dictionaries, each one have an \'id\' key, you must not change it from the original, and a \'rate key\' with the number you calculated :\n \'{comments}\'"
+                    "content": f"See this comment and transform it in a scale from 0 to 10, if the comment doesn't make sense, return 0. I want you to return just one number, nothing more :\n \'{comment}\'"
                 },
             ],
             model="gpt-3.5-turbo",
             temperature=0
         )
         print(f"{n} calculada")
+        print(response.choices[0].message.content)
 
-        return json.loads(response.choices[0].message.content)  # Adicionando comentários no json
+        return float(response.choices[0].message.content)  # Adicionando comentários no json
     except openai.OpenAIError as e:  # Se o chatgpt retornar um erro de tokens
         print('\n\n =================================')
         print(f"Erro na {n}, tentando calcular novamente!")
-        print(' ================================= \n\n')
+        print('54 ================================= \n\n')
         print(e)
         sleep(5)  # Espero 10 segundos
-        return get_comment_scale(comments, n)  # Tento executar novamente a função
+        return get_comment_scale(comment, n)  # Tento executar novamente a função
 
 
 def minimise_tokens_per_message(comments: pd.Series) -> list[dict]:
@@ -74,23 +76,18 @@ def analyse_comments(dataframe: pd.DataFrame) -> None:#
     
     # Mando a coluna com os comentários para a função que vai retornar uma lista separada para que
     # Não envie tantos comentários ao mesmo tempo
-    comments_to_send_to_gpt = minimise_tokens_per_message(dataframe['COMENTARIO'])
+    # comments_to_send_to_gpt = minimise_tokens_per_message(dataframe['COMENTARIO'])
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         threads_executing: list[concurrent.futures.Future] = []  # Threads executadas
 
-        for i, comment_to_send in enumerate(comments_to_send_to_gpt):  # Pra cada lista de dicionários dentro da lista principal
+        for i, comment_to_send in enumerate(dataframe['COMMENT']):  # Pra cada lista de dicionários dentro da lista principal
             threads_executing.append(executor.submit(get_comment_scale, comment_to_send, i))
 
         concurrent.futures.wait(threads_executing)  # Espero todos os comentários serem processados
 
         # Lista temporária que irá servir para organizar os cometários que foram retornados
-        comments_on_scale_to_convert = []
-
         for thread in threads_executing:
-            comments_on_scale_to_convert += thread.result()
-        
-    for comment in sorted(comments_on_scale_to_convert, key=lambda d: d['id']):
-        comments_on_scale.append(comment['rate'])
+            comments_on_scale += [thread.result()]
     
-    dataframe['COMENTARIO_COMO_NOTA'] = comments_on_scale
+    dataframe.insert(10, 'COMMENT AS NOTE', comments_on_scale)
