@@ -135,6 +135,9 @@ def  coletar_dados(pessoa):
     comentario = re.search(r'Posted: (.+)\n(.+)',comentario).group(2).strip()  # take only the comment
     comentario = re.sub(';', '.', comentario)  # replace ';' for '.' to avoid formatting errors on Excel
     helpful,funny = arrumar_opinioes(opinioes)
+    horas = re.sub(',','',horas)
+    helpful = re.sub(',','', helpful)
+    funny = re.sub(',','',funny)
     return [comentario, opiniao_final, horas, data, helpful, funny]  # return a list in the specified order we want
     
 
