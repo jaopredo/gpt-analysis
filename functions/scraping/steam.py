@@ -135,9 +135,9 @@ def  coletar_dados(pessoa):
     comentario = re.search(r'Posted: (.+)\n(.+)',comentario).group(2).strip()  # take only the comment
     comentario = re.sub(';', '.', comentario)  # replace ';' for '.' to avoid formatting errors on Excel
     helpful,funny = arrumar_opinioes(opinioes)
-    horas = re.sub(',','',horas)
-    helpful = re.sub(',','', helpful)
-    funny = re.sub(',','',funny)
+    horas = re.sub(',','',str(horas))
+    helpful = re.sub(',','', str(helpful))
+    funny = re.sub(',','',str(funny))
     return [comentario, opiniao_final, horas, data, helpful, funny]  # return a list in the specified order we want
     
 
@@ -167,6 +167,7 @@ def coletar_preco(tabela_valores):
     try:  # desconsidering the discount:
         precos = tabela_valores.find_all("div", class_="game_purchase_price price")
         for preco_jogo in precos:
+            
             print(preco_jogo.text.strip())
             if 'Free' in preco_jogo.text.strip():
                 return 'R$ 00,00'
@@ -176,6 +177,9 @@ def coletar_preco(tabela_valores):
                 continue
             if preco_jogo != None:
                 return preco_jogo.text.strip()[2:]
+            print("ashdajhdfjsahfhasdjhagsdhgasdgajshdg")
+            a = preco_jogo.group(1)
+            print("!"*50)
     except:
         try:  # considering that the game has the discount:
             frase = tabela_valores.find("div", class_="discount_block game_purchase_discount").text  # take a phrase with the discount and the final price
@@ -225,7 +229,7 @@ def coletar_informacoes_do_jogo(jogo):
     
     id_jogo,link_main = pesquisa_google(jogo)  # take the game's home page link on Steam and his id
     page = requests.get(link_main)
-    print(jogo,'---',link_main)
+    print(jogo.strip(),'---',link_main)
     soup = BeautifulSoup(page.text,"lxml")
     genero = coletar_genero(soup)
     dados_comentarios = coletar_comentarios(link_main,id_jogo)  # collect the comments about the game
@@ -256,4 +260,6 @@ def escrever(empresa,jogo,genero,preco_jogo,dados_comentarios):
         for info in dados_comentarios:
             # comment, final opinion, hours, date, helpful, funny
             arquivo.write(f'{empresa};{jogo};{genero};{preco_jogo};{info[0]};{info[1]};{info[2]};{info[3]};{info[4]};{info[5]}\n')
+
+steam()
             
