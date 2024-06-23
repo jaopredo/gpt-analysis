@@ -16,8 +16,10 @@ def find_url(game):
     fatia = soup.find("div", class_="egMi0 kCrYT") #extract the best result
     link = fatia.find("a")
     link = link['href'] #gets the link
-    link = re.search(r'/url\?q=(.+?)&sa=',link).group(1) #filters only the good part
-    return(link+"reviews/?ref_=tt_ov_rt")    #return the review link
+    #link = re.search(r'/url\?q=(.+?)&sa=',link).group(1) #filters only the good part
+    game_imdb_id = link.split('/')[5]
+    link = f"https://www.imdb.com/title/{game_imdb_id}"
+    return(link)    #return the main link
     
 def info_person(person):
     """
@@ -33,8 +35,9 @@ def info_person(person):
     
     try:
         rate = person.find("span", class_="rating-other-user-rating").text.strip() #gets the rate of the person, if it does not work, the person did not gave us an final rate
+        rate = rate.split('/')[0]
     except:
-        rate = "Not Informed" 
+        rate = '5' 
         
     date = person.find("span", class_="review-date").text.strip()
     
@@ -49,18 +52,31 @@ def info_person(person):
     
     return personal_list #returns the person list 
 
+def find_genre(link_main):
+    page = requests.get(link_main,
+                        headers = {
+                            'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0'
+                            })
+    try:
+        soup = BeautifulSoup(page.text,'lxml')
+        genre = soup.find('span', class_="ipc-chip__text").text.strip()
+        return genre
+    except:
+        print(link_main)
+
 def search_for_game_information(game):
     """
     recives an game and extracts the data from it
     
     """
-    
-    link = find_url(game) #gets the commentary link of that game
-    page = requests.get(link) 
+    link_main = find_url(game)
+    link_comments = link_main + "/reviews/?ref_=tt_ov_rt" #gets the commentary link of that game
+    page = requests.get(link_comments) 
     soup = BeautifulSoup(page.text, "lxml")
+    genre = find_genre(link_main)
     
     people_info = soup.find_all("div", class_="lister-item mode-detail imdb-user-review collapsable") #gets all the commentaries available on the page
-    game_list = [] #contém os comentários de um certo jogo
+    game_list = [genre] #contém os comentários de um certo jogo
     count = 1
     #Para cada comentário irá se extrair os dados:
     for person in people_info:
@@ -72,44 +88,65 @@ def search_for_game_information(game):
         count+=1    
         
     return game_list #returns all the commentaries we got on a list
-
-def write(commentaries_list_company):
-    """
-    This function is used to write the data on an .csv file    
-    """
-    
-    with open('data/imdb.csv', 'a', encoding = 'utf-8') as file:
-        company = commentaries_list_company[0]
-        for _game_ in commentaries_list_company[1:]: #for each information in the list, it will write it on the .csv file
-            game = _game_[0] # catch the game
-            lista = _game_[1] #cath the info about the game
-            for person in lista: #for each person that commented on the game:
-                file.write(f"{company};{game};{person[0]};{person[1]};{person[2]};{person[3]};{person[4]}")
                 
-def search_for_company_games(info):
+def search_for_company_games(info,company_id,game_id):
     """
     Search for the information of each game in the company
     """
-    
     #'info' is on this format:Company1||||big_game_1||||big_game_2||||big_game_3||||recent_game_1||||recent_game_2
     info = info.split('||||') #Transform the string in a list, so we can extract the information 
     company= info[0]
     games = info[1:]
     commentaries_list_company = [company]
+    
+    with open('data/imdb_companies.csv','a',encoding='utf-8') as file:
+        file.write(f'{company_id};{company}\n')
+    
+    
     for game in games: #for each game of the company, it will extract the data needed 
-        commentaries_list_company.append([game,search_for_game_information(game)]) #calls the function search_for_game_information() 
-    write(commentaries_list_company)
+        commentaries_list_company.append([game_id,search_for_game_information(game),company_id,game]) #calls the function search_for_game_information() 
+        game_id+=1
+    write(commentaries_list_company) #calls the function write
+    
+    return game_id #returns the current game_id number so we can keep track of the position we are
+    
+def write(commentaries_list_company):
+    """
+    This function is used to write the data on an .csv file    
+    """
+    
+    with open('data/imdb_game_company.csv','a',encoding = 'utf-8') as file:
+        for _game_ in commentaries_list_company[1:]: #for each information in the list, it will write it on the .csv file
+            game_id = _game_[0] # catch the game
+            company_id = _game_[2]
+            game_name = _game_[3]
+            file.write(f'{game_id};{game_name};{company_id}\n')
+    
+    with open('data/imdb_game.csv', 'a', encoding = 'utf-8') as file:
+        for _game_ in commentaries_list_company[1:]: #for each information in the list, it will write it on the .csv file
+            game_id = _game_[0] # catch the game
+            genre = _game_[1][0]
+            lista = _game_[1] #cath the info about the game
+            for person in lista[1:]: #for each person that commented on the game:
+                file.write(f"{game_id};{genre};{person[0]};{person[1]};{person[2]};{person[3]};{person[4]}")
 
 def imdb():    
     """
     This Function do all the work needed in order to get the data from imdb
     """
     
-    with open('data/imdb.csv', 'w',encoding='utf-8') as arquivo:
-        arquivo.write("COMPANY;GAME;COMMENTARY TITLE;COMMENTARY;RATE;DATE;GENERAL OPINION ABOUT THE COMMENTARY"+"\n") #Every time the program starts, it will crate an new file
+    with open('data/imdb_companies.csv', 'w', encoding='utf-8') as file:
+        file.write('COMPANY ID;COMPANY NAME\n')
     
-    with open('data/lista_de_pesquisa.csv','r',encoding = 'utf-8') as arquivo: #Opens the file that contains all the information required in order to start the program
-        i=1
+    with open('data/imdb_game_company.csv','w',encoding = 'utf-8') as file:
+        file.write('GAME ID;GAME NAME; COMPANY ID\n')
+    
+    with open('data/imdb_game.csv', 'w',encoding='utf-8') as arquivo:
+        arquivo.write("GAME_ID;GENRE;COMMENTARY TITLE;COMMENTARY;RATE;DATE;GENERAL OPINION ABOUT THE COMMENTARY"+"\n") #Every time the program starts, it will crate an new file
+    
+    with open('data/imdb_list.csv','r',encoding = 'utf-8') as arquivo: #Opens the file that contains all the information required in order to start the program
+        company_id = 0
+        game_id = 0
         for info in arquivo:
-            search_for_company_games(info.strip()) #Do the work for each line
-            i+=1
+            game_id = search_for_company_games(info.strip(),company_id,game_id) #Do the work for each line
+            company_id+=1
