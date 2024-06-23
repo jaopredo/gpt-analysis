@@ -150,3 +150,7 @@ def imdb():
         for info in arquivo:
             game_id = search_for_company_games(info.strip(),company_id,game_id) #Do the work for each line
             company_id+=1
+
+
+
+
