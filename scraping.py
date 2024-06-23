@@ -1,4 +1,4 @@
-from functions.scraping.make_lists import make_steam_list, make_imdb
+from functions.scraping.make_lists import make_steam_list, make_imdb_list
 from functions.scraping.steam import steam
 from functions.scraping.imdb import imdb
 
