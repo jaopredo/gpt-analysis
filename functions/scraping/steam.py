@@ -77,7 +77,7 @@ def arrumar_opinioes(opinioes):
     # each comment has up to 4 types: helpful-funny(1), helpful(2), funny(3) and, neither(4):
 
     if opinioes == 'N/I':  # case 4
-        return ['N/I', 'N/I'] 
+        return ['0', '0'] 
     option = opinioes.split('\t')[0]
     #print('---------',opinioes)
 
@@ -97,21 +97,21 @@ def arrumar_opinioes(opinioes):
         try: 
             opinioes = re.search(r'(.+) people found this review helpful',option)
             helpful = opinioes.group(1)
-            return [helpful,'N/I']
+            return [helpful,'0']
         except:
             opinioes = re.search(r'(.+) person found this review helpful',option)
             helpful = opinioes.group(1)
-            return [helpful,'N/I']
+            return [helpful,'0']
 
     if 'funny' in opinioes:  #case 3
         try:
             opinioes = re.search(r'(.+) people found this review funny',option)
             funny = opinioes.group(2)
-            return ['N/I', funny]
+            return ['0', funny]
         except:
             opinioes = re.search(r'(.+) person found this review funny',option)
             funny = opinioes.group(2)
-            return ['N/I', funny]
+            return ['0', funny]
 
 
 def  coletar_dados(pessoa):
@@ -123,7 +123,7 @@ def  coletar_dados(pessoa):
     data = pessoa.find("div", class_="date_posted").text.strip()
     horas = pessoa.find("div", class_="hours").text.strip()  # it is on this format: '{horas} hrs on record'
     comentario = pessoa.find("div", class_="apphub_CardTextContent").text.strip() # take a large block of code that contains the date and the comment
-    opiniao_final = pessoa.find("div", class_="title").text.strip()
+    final_opinion = pessoa.find("div", class_="title").text.strip()
     try:
         opinioes = pessoa.find("div", class_="found_helpful").text.strip()
     except:
@@ -136,9 +136,16 @@ def  coletar_dados(pessoa):
     comentario = re.sub(';', '.', comentario)  # replace ';' for '.' to avoid formatting errors on Excel
     helpful,funny = arrumar_opinioes(opinioes)
     horas = re.sub(',','',str(horas))
+    horas = re.sub(r'\.',',',horas)
     helpful = re.sub(',','', str(helpful))
     funny = re.sub(',','',str(funny))
-    return [comentario, opiniao_final, horas, data, helpful, funny]  # return a list in the specified order we want
+    if final_opinion == 'Recommended':
+        final_opinion = 1
+    else:
+        final_opinion = 0
+    
+    
+    return [comentario, final_opinion, horas, data, helpful, funny]  # return a list in the specified order we want
     
 
 def coletar_comentarios(link_main, id_jogo):
@@ -165,9 +172,9 @@ def coletar_preco(tabela_valores):
     """
 
     try:  # desconsidering the discount:
+        temp = []
         precos = tabela_valores.find_all("div", class_="game_purchase_price price")
         for preco_jogo in precos:
-            
             print(preco_jogo.text.strip())
             if 'Free' in preco_jogo.text.strip():
                 return '00,00'
@@ -175,11 +182,12 @@ def coletar_preco(tabela_valores):
                 continue
             if '$' not in preco_jogo.text.strip():
                 continue
-            if preco_jogo != None:
+            temp.append(preco_jogo)
+            if len(temp) != 0:
                 return preco_jogo.text.strip()[2:]
-            print("ashdajhdfjsahfhasdjhagsdhgasdgajshdg")
             a = preco_jogo.group(1)
             print("!"*50)
+        precos.group('1')
     except:
         try:  # considering that the game has the discount:
             frase = tabela_valores.find("div", class_="discount_block game_purchase_discount").text  # take a phrase with the discount and the final price
@@ -187,10 +195,10 @@ def coletar_preco(tabela_valores):
             preco_original = tabela_valores.find("div", class_="discount_original_price").text.strip()
             preco_final = tabela_valores.find("div", class_="discount_final_price").text.strip()
             
-            return preco_final[2:]
+            return preco_final[3:]
         except:
             try:  # considering that there is a discount on the price for buying DLCs:
-                preco_final = tabela_valores.find("div", class_="discount_final_price").text[3:]
+                preco_final = tabela_valores.find("div", class_="discount_final_price").text[2:]
                 preco_final = re.sub(',','.',preco_final)  # take out the commas
                 preco_final = re.sub(' ','',preco_final)  # take out the blank spaces
                 desconto = tabela_valores.find("div", class_="bundle_base_discount").text.strip()[1:-1]
@@ -201,7 +209,12 @@ def coletar_preco(tabela_valores):
 
                 return(preco_original[2:])
             except:
-                print("preço")
+                try:
+                    preco = tabela_valores.find("div", class_="discount_final_price").text.strip()
+                    print(preco)
+                    return preco[2:]
+                except:    
+                    return "00,00"
         
    
 def coletar_genero(soup):
@@ -212,11 +225,13 @@ def coletar_genero(soup):
     try:
         tabela = soup.find("div", class_="details_block")  # take some infos
         genero = re.search(r'Genre:(.+)\n',tabela.text).group(1).strip() # take the game category
+        genero = genero.split(',')[0] #cleaning and only extracting the first genre of the list
         return genero
     except:
         try:
             tabela = soup.find("div", class_="block_content_inner")
             genero = re.search(r'Genre:(.+)\n',tabela.text).group(1).strip()
+            genero = genero.split(',')[0]
             return genero
         except:
             print("genero")
@@ -239,26 +254,46 @@ def coletar_informacoes_do_jogo(jogo):
 
 
 def steam():
-    with open('data/steam.csv', 'w', encoding = 'utf-8') as arquivo:
-        arquivo.write('GAME STUDIO;GAME NAME;CATEGORY;PRICE;COMMENT;FINAL OPINION;HOURS SPENT;DATE OF THE COMMENT; HELPFUL; FUNNY;\n')
-
+    with open('data/steam_games.csv', 'w', encoding = 'utf-8') as arquivo:
+        arquivo.write('GAME ID;CATEGORY;PRICE;COMMENT;FINAL OPINION;HOURS SPENT;DATE OF THE COMMENT; HELPFUL; FUNNY;\n')
+    
+    with open('data/steam_companies.csv','w', encoding='utf-8') as file:
+        file.write('COMPANY ID; COMPANY\n') 
+    
+    with open('data/steam_game_company.csv','w',encoding = 'utf-8') as file:
+        file.write('GAME ID;GAME NAME;GAME COMPANY ID\n')
+    
     with open('data/steam_list.csv','r',encoding = 'utf-8') as arquivo:
-        for linha in arquivo:  # each line is in this format : 'Epic Games||||Fortnite||||Gears of War||||Infinity Blade||||Fortnite Chapter 2 Season 8||||Tony Hawk's Pro Skater 1+2'
+        game_id = -1
+        for company_id,linha in enumerate(arquivo):  # each line is in this format : 'Epic Games||||Fortnite||||Gears of War||||Infinity Blade||||Fortnite Chapter 2 Season 8||||Tony Hawk's Pro Skater 1+2'
+
             lista = linha.split('||||')
             empresa = lista[0].strip()
             print('\n\n',empresa)
-            for jogo in lista[1:]:
+            
+            for jogo in (lista[1:]):
+                game_id += 1
+                
+                #writing on the steam_game_company.csv, so we can search fo an game end its company:
+                with open('data/steam_game_company.csv', 'a', encoding = 'utf-8') as file:
+                    file.write(f'{game_id};{jogo.strip()};{company_id}\n')
+                
                 try:
                     genero, dados_comentarios, preco_jogo = coletar_informacoes_do_jogo(jogo)
-                    escrever(empresa,jogo.strip(),genero,preco_jogo,dados_comentarios)
+                    escrever(game_id,jogo.strip(),genero,preco_jogo,dados_comentarios)
                 except Exception as error:
                     print('#############',error)
+                    
+            with open('data/steam_companies.csv','a',encoding = 'utf-8') as file:
+                file.write(f'{company_id};{empresa}\n')
 
 
-def escrever(empresa,jogo,genero,preco_jogo,dados_comentarios):
-    with open('data/steam.csv', 'a', encoding = 'utf-8' ) as arquivo:
+def escrever(game_id,jogo,genero,preco_jogo,dados_comentarios):
+    
+    with open('data/steam_games.csv', 'a', encoding = 'utf-8' ) as arquivo:
         for info in dados_comentarios:
             # comment, final opinion, hours, date, helpful, funny
-            arquivo.write(f'{empresa};{jogo};{genero};{preco_jogo};{info[0]};{info[1]};{info[2]};{info[3]};{info[4]};{info[5]}\n')
+            arquivo.write(f'{game_id};{genero};{preco_jogo};{info[0]};{info[1]};{info[2]};{info[3]};{info[4]};{info[5]}\n')
 
-steam()
+
+
