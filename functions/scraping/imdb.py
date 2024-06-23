@@ -148,9 +148,7 @@ def imdb():
         company_id = 0
         game_id = 0
         for info in arquivo:
+            print("======== PEGANDO DO IMDB ========")
+            print(company_id)
             game_id = search_for_company_games(info.strip(),company_id,game_id) #Do the work for each line
             company_id+=1
-
-
-
-

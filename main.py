@@ -5,7 +5,7 @@ from scraping import *
 
 def main():
     # Realizando a raspagem de dados
-    # scrap_from_web()
+    scrap_from_web()
 
     # Passando os dados
     dataset_steam = pd.read_csv('data/steam_games.csv', on_bad_lines="skip", sep=";")

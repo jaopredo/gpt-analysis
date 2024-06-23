@@ -244,6 +244,7 @@ def coletar_informacoes_do_jogo(jogo):
     
     id_jogo,link_main = pesquisa_google(jogo)  # take the game's home page link on Steam and his id
     page = requests.get(link_main)
+    print("======== PEGANDO DA STEAM ========")
     print(jogo.strip(),'---',link_main)
     soup = BeautifulSoup(page.text,"lxml")
     genero = coletar_genero(soup)
