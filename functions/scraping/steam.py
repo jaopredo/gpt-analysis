@@ -175,7 +175,7 @@ def coletar_preco(tabela_valores):
             if '$' not in preco_jogo.text.strip():
                 continue
             if preco_jogo != None:
-                return preco_jogo.text.strip()
+                return preco_jogo.text.strip()[2:]
     except:
         try:  # considering that the game has the discount:
             frase = tabela_valores.find("div", class_="discount_block game_purchase_discount").text  # take a phrase with the discount and the final price
@@ -183,7 +183,7 @@ def coletar_preco(tabela_valores):
             preco_original = tabela_valores.find("div", class_="discount_original_price").text.strip()
             preco_final = tabela_valores.find("div", class_="discount_final_price").text.strip()
             
-            return preco_final
+            return preco_final[2:]
         except:
             try:  # considering that there is a discount on the price for buying DLCs:
                 preco_final = tabela_valores.find("div", class_="discount_final_price").text[3:]
@@ -195,7 +195,7 @@ def coletar_preco(tabela_valores):
                 preco_final = float(preco_final)
                 preco_original = preco_final/(1-desconto)
 
-                return(preco_original)
+                return(preco_original[2:])
             except:
                 print("preço")
         
@@ -256,3 +256,4 @@ def escrever(empresa,jogo,genero,preco_jogo,dados_comentarios):
         for info in dados_comentarios:
             # comment, final opinion, hours, date, helpful, funny
             arquivo.write(f'{empresa};{jogo};{genero};{preco_jogo};{info[0]};{info[1]};{info[2]};{info[3]};{info[4]};{info[5]}\n')
+            
