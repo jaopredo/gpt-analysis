@@ -144,7 +144,7 @@ def imdb():
     with open('data/imdb_game.csv', 'w',encoding='utf-8') as arquivo:
         arquivo.write("GAME_ID;GENRE;COMMENTARY TITLE;COMMENTARY;RATE;DATE;GENERAL OPINION ABOUT THE COMMENTARY"+"\n") #Every time the program starts, it will crate an new file
     
-    with open('data/imdb_list.csv','r',encoding = 'utf-8') as arquivo: #Opens the file that contains all the information required in order to start the program
+    with open('data/steam_list.csv','r',encoding = 'utf-8') as arquivo: #Opens the file that contains all the information required in order to start the program
         company_id = 0
         game_id = 0
         for info in arquivo:
