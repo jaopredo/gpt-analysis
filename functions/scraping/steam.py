@@ -170,7 +170,7 @@ def coletar_preco(tabela_valores):
             
             print(preco_jogo.text.strip())
             if 'Free' in preco_jogo.text.strip():
-                return 'R$ 00,00'
+                return '00,00'
             if 'DEMO' in preco_jogo.text.strip():
                 continue
             if '$' not in preco_jogo.text.strip():
@@ -260,3 +260,5 @@ def escrever(empresa,jogo,genero,preco_jogo,dados_comentarios):
         for info in dados_comentarios:
             # comment, final opinion, hours, date, helpful, funny
             arquivo.write(f'{empresa};{jogo};{genero};{preco_jogo};{info[0]};{info[1]};{info[2]};{info[3]};{info[4]};{info[5]}\n')
+
+steam()
