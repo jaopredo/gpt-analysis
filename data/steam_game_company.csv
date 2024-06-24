@@ -1,21 +1,51 @@
 GAME ID;GAME NAME;GAME COMPANY ID
-0;Counter-Strike: Global Offensive;0
-1;Dota 2;0
-2;Half-Life: Alyx;0
-3;Portal 2;0
-4;Assassin's Creed Odyssey;1
-5;Rainbow Six Siege;1
-6;Far Cry 5;1
-7;Watch Dogs 2;1
-8;Grand Theft Auto V;2
-9;Red Dead Redemption 2;2
-10;Bully: Scholarship Edition;2
-11;Max Payne 3;2
-12;Apex Legends;3
-13;The Sims 4;3
-14;Battlefield V;3
-15;Star Wars Jedi: Fallen Order;3
-16;The Witcher 3: Wild Hunt;4
-17;Cyberpunk 2077;4
-18;The Witcher 2: Assassins of Kings;4
-19;The Witcher: Enhanced Edition;4
+0;Assassin's Creed Odyssey;0
+1;Rainbow Six Siege;0
+2;Far Cry 5;0
+3;Watch Dogs 2;0
+4;The Division 2;0
+5;Apex Legends;1
+6;FIFA 21;1
+7;Star Wars Jedi: Fallen Order;1
+8;The Sims 4;1
+9;Battlefield V;1
+10;Counter-Strike: Global Offensive;2
+11;Dota 2;2
+12;Half-Life: Alyx;2
+13;Portal 2;2
+14;Left 4 Dead 2;2
+15;Grand Theft Auto V;3
+16;Red Dead Redemption 2;3
+17;Bully: Scholarship Edition;3
+18;Max Payne 3;3
+19;L.A. Noire;3
+20;Fallout 4;4
+21;The Elder Scrolls V: Skyrim;4
+22;Doom Eternal;4
+23;Wolfenstein II: The New Colossus;4
+24;Prey;4
+25;Final Fantasy XV;5
+26;Shadow of the Tomb Raider;5
+27;Just Cause 4;5
+28;Life is Strange 2;5
+29;Deus Ex: Mankind Divided;5
+30;Resident Evil 2;6
+31;Monster Hunter: World;6
+32;Devil May Cry 5;6
+33;Street Fighter V;6
+34;Mega Man 11;6
+35;Borderlands 3;7
+36;XCOM 2;7
+37;NBA 2K21;7
+38;Civilization VI;7
+39;Mafia III;7
+40;The Witcher 3: Wild Hunt;8
+41;Cyberpunk 2077;8
+42;Gwent: The Witcher Card Game;8
+43;Thronebreaker: The Witcher Tales;8
+44;The Witcher Adventure Game;8
+45;Call of Duty: Warzone;9
+46;Crash Bandicoot N. Sane Trilogy;9
+47;Sekiro: Shadows Die Twice;9
+48;Tony Hawk's Pro Skater 1 + 2;9
+49;Spyro Reignited Trilogy;9
