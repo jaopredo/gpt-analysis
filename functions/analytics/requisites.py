@@ -16,7 +16,7 @@ def make_requisites_analysis(requisites, recommended):
             messages=[
                 {
                     "role": "user",
-                    "content": f"Please, see this PC components and estipulate how much a computer with this specifications would cost. Return a really small text about the components prices too: {requisites}"
+                    "content": f"Please, see this PC components and estipulate how much a computer with this specifications would cost. Return a really small text about the components prices too, return in Brazilian Reais: {requisites}"
                 },
             ],
             model="gpt-3.5-turbo",
@@ -27,7 +27,7 @@ def make_requisites_analysis(requisites, recommended):
             messages=[
                 {
                     "role": "user",
-                    "content": f"Please, see this PC components and estipulate how much a computer with this specifications would cost. Return a really small text about the components prices too: {recommended}"
+                    "content": f"Please, see this PC components and estipulate how much a computer with this specifications would cost. Return a really small text about the components prices too, return in Brazilian Reais: {recommended}"
                 }
             ],
             model="gpt-3.5-turbo",
