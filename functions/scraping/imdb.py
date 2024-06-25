@@ -52,17 +52,24 @@ def info_person(person):
     
     return personal_list #returns the person list 
 
-def find_genre(link_main):
+def find_genre_and_description(link_main):
+    print(link_main)
     page = requests.get(link_main,
                         headers = {
                             'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0'
                             })
+    soup = BeautifulSoup(page.text,'lxml')
     try:
-        soup = BeautifulSoup(page.text,'lxml')
         genre = soup.find('span', class_="ipc-chip__text").text.strip()
-        return genre
     except:
-        print(link_main)
+        print('genre',link_main)
+    try:
+        description = soup.find("span", class_="sc-96357b74-2 CKcbM").text
+        description = re.sub(';','.',description)
+    except:
+        print('description', link_main)
+        
+    return genre, description
 
 def search_for_game_information(game):
     """
@@ -73,10 +80,10 @@ def search_for_game_information(game):
     link_comments = link_main + "/reviews/?ref_=tt_ov_rt" #gets the commentary link of that game
     page = requests.get(link_comments) 
     soup = BeautifulSoup(page.text, "lxml")
-    genre = find_genre(link_main)
+    genre,description= find_genre_and_description(link_main)
     
     people_info = soup.find_all("div", class_="lister-item mode-detail imdb-user-review collapsable") #gets all the commentaries available on the page
-    game_list = [genre] #contém os comentários de um certo jogo
+    game_list = [genre,description] #contém os comentários de um certo jogo
     count = 1
     #Para cada comentário irá se extrair os dados:
     for person in people_info:
@@ -87,7 +94,7 @@ def search_for_game_information(game):
         game_list.append(personal_list) #appends the information we just got 
         count+=1    
         
-    return game_list #returns all the commentaries we got on a list
+    return game_list #returns all the commentaries we got on a list  [genre,description,comment1,comment2,...]
                 
 def search_for_company_games(info,company_id,game_id):
     """
@@ -120,14 +127,16 @@ def write(commentaries_list_company):
             game_id = _game_[0] # catch the game
             company_id = _game_[2]
             game_name = _game_[3]
-            file.write(f'{game_id};{game_name};{company_id}\n')
+            description = _game_[1][1]
+            file.write(f'{game_id};{game_name};{company_id};{description}\n')
     
     with open('data/imdb_game.csv', 'a', encoding = 'utf-8') as file:
-        for _game_ in commentaries_list_company[1:]: #for each information in the list, it will write it on the .csv file
+        for _game_ in commentaries_list_company[1:]: #for each information in the list, it will write it on the .csv file    
+            
             game_id = _game_[0] # catch the game
             genre = _game_[1][0]
             lista = _game_[1] #cath the info about the game
-            for person in lista[1:]: #for each person that commented on the game:
+            for person in lista[2:]: #for each person that commented on the game:
                 file.write(f"{game_id};{genre};{person[0]};{person[1]};{person[2]};{person[3]};{person[4]}")
 
 def imdb():    
@@ -139,7 +148,7 @@ def imdb():
         file.write('COMPANY ID;COMPANY NAME\n')
     
     with open('data/imdb_game_company.csv','w',encoding = 'utf-8') as file:
-        file.write('GAME ID;GAME NAME; COMPANY ID\n')
+        file.write('GAME ID;GAME NAME; COMPANY ID;DESCRIPTION\n')
     
     with open('data/imdb_game.csv', 'w',encoding='utf-8') as arquivo:
         arquivo.write("GAME_ID;GENRE;COMMENTARY TITLE;COMMENTARY;RATE;DATE;GENERAL OPINION ABOUT THE COMMENTARY"+"\n") #Every time the program starts, it will crate an new file
@@ -152,3 +161,4 @@ def imdb():
             print(company_id)
             game_id = search_for_company_games(info.strip(),company_id,game_id) #Do the work for each line
             company_id+=1
+
