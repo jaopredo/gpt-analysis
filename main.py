@@ -9,11 +9,11 @@ def main():
     """
 
     # Scraping the informations from the WEB
-    scrap_from_web()
+    # scrap_from_web()
 
     # Getting the generated DATA and sending to get the analysis
     dataset_steam = pd.read_csv('data/steam_games.csv', on_bad_lines="skip", sep=";")
-    games_dataset = pd.read_csv('data/imdb_game_company.csv', on_bad_lines="skip", sep=";")
+    games_dataset = pd.read_csv('data/steam_game_company.csv', on_bad_lines="skip", sep=";")
     
     generate_requisites_analysis(games_dataset)
     analyse_comments(dataset_steam)

@@ -68,7 +68,7 @@ def generate_requisites_analysis(games_df: pd.DataFrame):
                 executor.submit(  # Function and it's arguments (Send to the thread executor)
                     make_requisites_analysis,
                     game[1]["MINIMUM REQUIREMENTS"],
-                    game[1]["RECOMMENDED REQUIREMENTS"]
+                    game[1][" RECOMMENDED REQUIREMENTS"]
                 )
             )
         
