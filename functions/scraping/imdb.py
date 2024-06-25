@@ -1,3 +1,6 @@
+"""
+Module with the functions responsible for searching the games informations in IMDB website
+"""
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -6,7 +9,6 @@ import re
 def find_url(game):
     """
     Search on google the imdb site for an specific game
-    
     """
     
     game = re.sub(' ', '+',game) + "+game+imdb"
