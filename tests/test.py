@@ -1,34 +1,9 @@
-import json
+import pandas as pd
 
-json.loads("""[
-    {"id": 660, "rate": 9},
-    {"id": 661, "rate": 8},
-    {"id": 662, "rate": 7},
-    {"id": 663, "rate": 6},
-    {"id": 664, "rate": 5},
-    {"id": 665, "rate": 8},
-    {"id": 666, "rate": 7},
-    {"id": 667, "rate": 9},
-    {"id": 668, "rate": 8},
-    {"id": 669, "rate": 7},
-    {"id": 670, "rate": 6},
-    {"id": 671, "rate": 8},
-    {"id": 672, "rate": 9},
-    {"id": 673, "rate": 7},
-    {"id": 674, "rate": 8},
-    {"id": 675, "rate": 9},
-    {"id": 676, "rate": 8},
-    {"id": 677, "rate": 9},
-    {"id": 678, "rate": 7},
-    {"id": 679, "rate": 8},
-    {"id": 680, "rate": 9},
-    {"id": 681, "rate": 6},
-    {"id": 682, "rate": 9},
-    {"id": 683, "rate": 8},
-    {"id": 684, "rate": 7},
-    {"id": 685, "rate": 9},
-    {"id": 686, "rate": 8},
-    {"id": 687, "rate": 9},
-    {"id": 688, "rate": 6},
-    {"id": 689, "rate": 7}
-]""")
+tabela_jogos = pd.read_csv("data/imdb_game_company.csv", sep=";")
+tabela_requisitos = pd.read_csv("data/requisites_semicolon.csv", sep=";")
+
+tabela_jogos['MINIMUM_REQUISITES'] = tabela_requisitos['MINIMUM_REQUISITES']
+tabela_jogos['RECOMMENDED_SETUP'] = tabela_requisitos['RECOMMENDED_SETUP']
+
+tabela_jogos.to_csv('data/imdb_game_company.csv', sep=";")

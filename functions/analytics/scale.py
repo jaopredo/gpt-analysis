@@ -33,7 +33,7 @@ def get_comment_scale(comment: str, n: int) -> list[dict]:
     except openai.OpenAIError as e:  # Se o chatgpt retornar um erro de tokens
         print('\n\n =================================')
         print(f"Erro na {n}, tentando calcular novamente!")
-        print('54 ================================= \n\n')
+        print(' ================================= \n\n')
         print(e)
         sleep(5)  # Espero 10 segundos
         return get_comment_scale(comment, n)  # Tento executar novamente a função
