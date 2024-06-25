@@ -90,4 +90,4 @@ def analyse_comments(dataframe: pd.DataFrame) -> None:#
         for thread in threads_executing:
             comments_on_scale += [thread.result()]
     
-    dataframe.insert(10, 'COMMENT AS NOTE', comments_on_scale)
+    dataframe['COMMENT AS NOTE'] = comments_on_scale

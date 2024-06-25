@@ -17,7 +17,7 @@ def main():
     # analyse_comments(dataset_steam)
 
     # Gerando o novo dataset
-    games_dataset.to_csv('data/imdb_games_company.csv', sep=";", index=False)
+    games_dataset.to_csv('data/imdb_game_company.csv', sep=";", index=False)
     dataset_steam.to_csv('data/steam.csv', sep=';', index=False)
 
 
