@@ -8,14 +8,14 @@ import re
 import time
 
 
-def pesquisa_google(jogo):
+def google_search(game):
     """
     Here we search a game on google and takes the valid Steam link
     """
 
     #https://www.bing.com/search?q=dead+by+daylight+steam
-    jogo = re.sub(' ','+', jogo)   # replace the blank spaces for +
-    url_google = f"https://www.google.com/search?q={jogo}steam"
+    game = re.sub(' ','+', game)   # replace the blank spaces for +
+    url_google = f"https://www.google.com/search?q={game}steam"
     page = requests.get(url_google)
     soup = BeautifulSoup(page.text,"lxml")
     fatias = soup.find_all("div", class_="egMi0 kCrYT")
@@ -236,13 +236,50 @@ def coletar_genero(soup):
         except:
             print("genero")
             
+def collect_requirements(soup):
+    try: #The game has minimum and recommended requirements
+        #collecting:         
+        minimum_requirements= soup.find("div", class_="game_area_sys_req_leftCol").text.strip()
+        recommended_requirements= soup.find("div", class_="game_area_sys_req_rightCol").text.strip()
+       
+        #cleaning the data:
+        minimum_requirements = re.sub(';','.',minimum_requirements).split('\n\n')[0] #removes all ';' and gets only the part before \n\n
+        recommended_requirements = re.sub(';','.',recommended_requirements).split('\n\n')[0] #removes all ';' and gets only the part before \n\n
+        
+        minimum_requirements = minimum_requirements.split('Minimum:')[1]
+        recommended_requirements = recommended_requirements.split('Recommended:')[1]
+        
+        return minimum_requirements, recommended_requirements #returns the requirements
+    except:
+        try: #The game has only the minimum requirements
+            #collecting the data    
+            minimum_requirements = soup.find("div", class_="game_area_sys_req sysreq_content active").text.strip()
+            
+            #cleaning the data:
+            minimum_requirements=re.sub(';','.',minimum_requirements).split('\n\n')[0]
+                   
+            minimum_requirements = minimum_requirements.split('Minimum:')[1]
+            
+            return minimum_requirements,'NOT INFORMED' #return the requirement
+        except:
+            try: #Another type of requirements on the game: 
+                #collecting the data:
+                minimum_requirements = soup.find("div", class_="game_area_sys_req_full").text.strip()
+                #cleaning the data:
+                    
+                minimum_requirements = re.sub(';','.',minimum_requirements).split('\n\n')[0]
+                return minimum_requirements,'NOT INFORMED'
+            except:
+                
+                #if it does not find an requirement on the page, it will return 'NOT INFORMED'
+                return('NOT INFORMED','NOT INFORMED')
                 
 def coletar_informacoes_do_jogo(jogo):
     """
     Here we collect the infos about a game
     """
     
-    id_jogo,link_main = pesquisa_google(jogo)  # take the game's home page link on Steam and his id
+    id_jogo,link_main = google_search(jogo)  # take the game's home page link on Steam and his id
     page = requests.get(link_main)
     print("======== PEGANDO DA STEAM ========")
     print(jogo.strip(),'---',link_main)
@@ -251,7 +288,8 @@ def coletar_informacoes_do_jogo(jogo):
     dados_comentarios = coletar_comentarios(link_main,id_jogo)  # collect the comments about the game
     tabela_valores = soup.find("div", class_="game_area_purchase")
     preco_jogo = coletar_preco(tabela_valores)
-    return [genero, dados_comentarios,preco_jogo]
+    minimum_requirements, recommended_requirements = collect_requirements(soup)
+    return genero, dados_comentarios,preco_jogo,minimum_requirements,recommended_requirements
 
 
 def steam():
@@ -262,7 +300,7 @@ def steam():
         file.write('COMPANY ID; COMPANY\n') 
     
     with open('data/steam_game_company.csv','w',encoding = 'utf-8') as file:
-        file.write('GAME ID;GAME NAME;GAME COMPANY ID\n')
+        file.write('GAME ID;GAME NAME;GAME COMPANY ID;MINIMUM REQUIREMENTS; RECOMMENDED REQUIREMENTS\n')
     
     with open('data/steam_list.csv','r',encoding = 'utf-8') as arquivo:
         game_id = -1
@@ -275,13 +313,11 @@ def steam():
             for jogo in (lista[1:]):
                 game_id += 1
                 
-                #writing on the steam_game_company.csv, so we can search fo an game end its company:
-                with open('data/steam_game_company.csv', 'a', encoding = 'utf-8') as file:
-                    file.write(f'{game_id};{jogo.strip()};{company_id}\n')
+            
                 
                 try:
-                    genero, dados_comentarios, preco_jogo = coletar_informacoes_do_jogo(jogo)
-                    escrever(game_id,jogo.strip(),genero,preco_jogo,dados_comentarios)
+                    genero, dados_comentarios, preco_jogo,minimum_requirements,recommended_requirements = coletar_informacoes_do_jogo(jogo)
+                    escrever(game_id,company_id,jogo.strip(),genero,preco_jogo,dados_comentarios,minimum_requirements,recommended_requirements)
                 except Exception as error:
                     print('#############',error)
                     
@@ -289,12 +325,14 @@ def steam():
                 file.write(f'{company_id};{empresa}\n')
 
 
-def escrever(game_id,jogo,genero,preco_jogo,dados_comentarios):
+def escrever(game_id,company_id,jogo,genero,preco_jogo,dados_comentarios,minimum_requirements,recommended_requirements):
+    
+    #writing on the steam_game_company.csv, so we can search fo an game end its company:
+    with open('data/steam_game_company.csv', 'a', encoding = 'utf-8') as file:
+        file.write(f'{game_id};{jogo.strip()};{company_id};{minimum_requirements};{recommended_requirements}\n')
     
     with open('data/steam_games.csv', 'a', encoding = 'utf-8' ) as arquivo:
         for info in dados_comentarios:
             # comment, final opinion, hours, date, helpful, funny
             arquivo.write(f'{game_id};{genero};{preco_jogo};{info[0]};{info[1]};{info[2]};{info[3]};{info[4]};{info[5]}\n')
-
-
 
