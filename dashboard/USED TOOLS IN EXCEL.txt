@@ -1,0 +1,13 @@
+USED TOOLS IN EXCEL:
+
+Hiperlinks to create the buttons 'GAME ANALYSIS', 'STUDIO ANALYSIS'
+'DATA' topic to run the databasis to an Excel sheet
+'POWER PIVOT' topic to create relations between the tables
+'DEVELOPER' topic to run the macros
+Bonds to create a consolidated table
+Data segmentation to create the dashboards' slicers
+Dinamic tables to run the data in dinamic charts
+'POWER QUERY' to create tables that update automatically when you change the databasis (Data -> Queries & Conections)
+'VLOOKUP' to find the game and studio ids (=VLOOKUP(A2;AUXILIARY_SHEETS!$G$2:$H$51;2;FALSE))
+Formula to calculate the bennefit of the game '=LOG10(([@[HOURS SPENT]]/([@PRICE]+1)*([@RATE]+1)/11)+0,0001)*10/8)+5'
+'=PIVOT_TABLES_GAMES_SPECIFIC!W4' to generate the dinamic text 
