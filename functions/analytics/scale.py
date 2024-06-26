@@ -1,3 +1,7 @@
+"""
+This module has the functions responsible for sending the comments for CHATGPT and transforming them into a rate between 0 and 10
+"""
+
 import concurrent.futures
 from ai import client
 import pandas as pd
@@ -29,17 +33,24 @@ def get_comment_scale(comment: str, n: int) -> list[dict]:
         print(f"{n} calculada")
         print(response.choices[0].message.content)
 
-        return float(response.choices[0].message.content)  # Adicionando comentários no json
-    except openai.OpenAIError as e:  # Se o chatgpt retornar um erro de tokens
+        return float(response.choices[0].message.content)  # returning the comment converted in a note
+    except openai.OpenAIError as e:  # If GPT gives an error
         print('\n\n =================================')
         print(f"Erro na {n}, tentando calcular novamente!")
         print(' ================================= \n\n')
         print(e)
-        sleep(5)  # Espero 10 segundos
-        return get_comment_scale(comment, n)  # Tento executar novamente a função
+        sleep(5)  # Wait 5 seconds
+        return get_comment_scale(comment, n)  # Try to call the function again
 
 
 def minimise_tokens_per_message(comments: pd.Series) -> list[dict]:
+    """This function was responsible for getting all the comments and dividing them in sublists based on how
+    many tokens they would use, using a permanent variable to do so. This function is not used anymore,
+    because it was causing some hard fixing issues with CHATGPT, so we decided to remove it. We didn't erease
+    it because we thought it could be useful again
+    :param comments: The pandas series with the comments
+    """
+    raise DeprecationWarning
     total_tokens = get_number_of_tokens(list(comments))  # Quantos tokens vão ser enviados
     minimum_interations = total_tokens // configs.TOKENS_LIMIT  # Em quantos tokens vou ter que dividir
 
@@ -68,26 +79,24 @@ def minimise_tokens_per_message(comments: pd.Series) -> list[dict]:
 # Função que transforma a avaliação do comentário em uma escala numérica
 @see_execution_time
 def analyse_comments(dataframe: pd.DataFrame) -> None:#
-    """Função que analisa os comentários
+    """Function responsible for passing the comments to another function that will convert the comments as
+    notes in a scale from 0 to 10
     :param dataframe: Dataframe do pandas que será alterado
     """
 
-    comments_on_scale: list[dict] = []  #  A Lista que vai ter as notas em dicionários
-    
-    # Mando a coluna com os comentários para a função que vai retornar uma lista separada para que
-    # Não envie tantos comentários ao mesmo tempo
-    # comments_to_send_to_gpt = minimise_tokens_per_message(dataframe['COMENTARIO'])
+    comments_on_scale: list[float] = []  #  List that will be the new dataframe column
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        threads_executing: list[concurrent.futures.Future] = []  # Threads executadas
+        threads_executing: list[concurrent.futures.Future] = []  # Threads executing
 
-        for i, comment_to_send in enumerate(dataframe['COMMENT']):  # Pra cada lista de dicionários dentro da lista principal
+        for i, comment_to_send in enumerate(dataframe['COMMENT']):  # For each comment in the dataframe
             threads_executing.append(executor.submit(get_comment_scale, comment_to_send, i))
+            # Append the thread running in the list
+            # Send the function to the thread executor
 
-        concurrent.futures.wait(threads_executing)  # Espero todos os comentários serem processados
+        concurrent.futures.wait(threads_executing)  # Wait all comments be processed
 
-        # Lista temporária que irá servir para organizar os cometários que foram retornados
-        for thread in threads_executing:
+        for thread in threads_executing:  # Add the results to the new column list (comments_on_scale)
             comments_on_scale += [thread.result()]
     
     dataframe['COMMENT AS NOTE'] = comments_on_scale

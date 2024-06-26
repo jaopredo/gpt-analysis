@@ -2,6 +2,8 @@ from time import time
 import tiktoken
 
 def see_execution_time(func, *args):
+    """Decorator function to see the execution time of other functions
+    """
     def slave(*args, **kwargs):
         initial_time = time()
         func(*args, *kwargs)
@@ -13,7 +15,7 @@ def see_execution_time(func, *args):
 
 
 def get_number_of_tokens(sentence: any) -> int:
-    """Calcula a quantidade de tokens que a API vai usar
+    """Calculate how much tokens a message will consume in the API
     """
     encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
     return len(encoding.encode(str(sentence)))

@@ -1,3 +1,7 @@
+"""
+This module has the functions responsible for making a GPT analysis about the pc specs for running the game
+"""
+
 import pandas as pd
 import concurrent.futures
 from ai import client
